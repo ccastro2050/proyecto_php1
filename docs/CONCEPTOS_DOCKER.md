@@ -90,6 +90,36 @@ Dockerfile   →  IMAGEN      →  CONTENEDOR   →  VOLUMEN
 > Para una demo con las semillas exactas:
 > `docker compose down -v` y luego `docker compose up -d --build`.
 
+### El despliegue de ESTE proyecto, dibujado (Mermaid)
+
+Todo lo anterior, junto: lo que `docker compose up -d` levanta aquí es un
+**sistema de servidores en miniatura** — cada contenedor es un servidor
+con su propio hostname, unidos por la red interna del compose:
+
+```mermaid
+flowchart LR
+    NAV["Navegador / curl / Swagger"]
+    subgraph PC["Su PC — Docker Desktop (el 'centro de datos')"]
+        subgraph RED["red interna del compose (LAN virtual, con DNS propio)"]
+            APIFACTURAS["SERVIDOR DE APLICACIONES<br/>contenedor api-facturas<br/>hostname: api-facturas · escucha en 8022"]
+            PHPMYADMIN["SERVIDOR DE APLICACIONES<br/>contenedor phpmyadmin<br/>hostname: phpmyadmin · escucha en 80"]
+            MARIADB[("SERVIDOR DE BASE DE DATOS<br/>MariaDB/MySQL · contenedor mariadb<br/>hostname: mariadb · escucha en 3306")]
+        end
+    end
+    NAV -->|"localhost:8022"| APIFACTURAS
+    NAV -->|"localhost:8101"| PHPMYADMIN
+    APIFACTURAS -->|"mariadb:3306 (DNS de Docker)"| MARIADB
+    PHPMYADMIN -->|"mariadb:3306 (DNS de Docker)"| MARIADB
+    NAV -.->|"opcional (diagnóstico):<br/>localhost:13326"| MARIADB
+```
+
+**Guía de lectura:** los servicios se hablan entre sí **por nombre**
+(el DNS interno de Docker resuelve `postgres`, `api-facturas`, etc. a la
+IP del contenedor — jamás `localhost`, que dentro de un contenedor es él
+mismo). Hacia su PC solo existen las puertas `localhost:PUERTO` que el
+compose publica. Por eso este mismo diseño se despliega igual en un
+servidor real: cambiar de máquina no cambia la arquitectura.
+
 ## 5. Docker Compose (el "un solo comando" del proyecto)
 
 ¿Cómo levantar VARIOS contenedores (BD + API, y pronto más) sin escribir N
