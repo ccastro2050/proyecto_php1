@@ -81,7 +81,7 @@ producto` debe dar **8**.
 | **v1** | `producto` — nada más |
 | v2 | + persona, empresa, cliente, vendedor, factura, productosporfactura (el trigger que ya vive en la BD empieza a trabajar) |
 | v3–v4 | las mismas, contra más motores |
-| v5 | la API genérica puede leer cualquiera de las 12 |
+| v5 | el front las mostrará todas (v6) |
 | v6 | el front las ve a través de las APIs |
 
 **Regla de la v1:** el código solo puede nombrar la tabla `producto`. Que las

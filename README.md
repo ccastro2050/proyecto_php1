@@ -161,8 +161,7 @@ v1  api_facturas (PHP puro): CRUD de producto, solo MariaDB   ← USTED ESTÁ AQ
 v2  más tablas (persona, factura maestro-detalle…)
 v3  segundo motor (PostgreSQL) — nace la fábrica de repositorios
 v4  tercer motor (SQL Server) + compose completo
-v5  API genérica (/api/{tabla})
-v6  frontend PHP
+v5  frontend PHP
 ```
 
 La regla del juego: la **constitución** es permanente, cada versión tiene su

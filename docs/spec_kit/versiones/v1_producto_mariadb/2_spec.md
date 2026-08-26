@@ -2,8 +2,7 @@
 
 > **Versión 1** del desarrollo incremental ([mapa de versiones](../0_mapa_versiones.md)).
 > Rige la constitución del proyecto: [../../1_constitution.md](../../1_constitution.md).
-> En v1 el sistema completo ES esto: **no existe frontend, no existe API
-> genérica, y la API solo conoce una entidad y un motor.** (La BD `bdfacturas`
+> En v1 el sistema completo ES esto: **no existe frontend, y la API solo conoce una entidad y un motor.** (La BD `bdfacturas`
 > sí se crea COMPLETA desde el inicio — es infraestructura dada, ver
 > [5_data_model.md](5_data_model.md); lo que crece por versiones es la API.)
 >
@@ -49,8 +48,8 @@ servicio → repositorio, comunicados por **interfaces nativas de PHP**.
 
 La v1 es pequeña a propósito: su valor no está en la funcionalidad sino en
 dejar el **esqueleto arquitectónico correcto** sobre el que las versiones
-siguientes agregan tablas (v2), motores (v3, v4), la API genérica (v5) y el
-frontend (v6) **sin reescribir lo construido**.
+siguientes agregan tablas (v2), motores (v3, v4) y el
+frontend (v5) **sin reescribir lo construido**.
 
 ## 2. Alcance
 
@@ -72,7 +71,7 @@ frontend (v6) **sin reescribir lo construido**.
 - Endpoint `/` de diagnóstico.
 
 **No incluye (y es deliberado — ver [mapa de versiones](../0_mapa_versiones.md)):**
-- **Ningún frontend** (llega en v6) y **ninguna API genérica** (llega en v5).
+- **Ningún frontend** (llega en v5).
 - Endpoints para otras entidades (v2) — las otras 11 tablas EXISTEN en la BD,
   pero el código de la v1 solo puede nombrar `producto`.
 - Otros motores y la fábrica de repositorios (v3, v4).

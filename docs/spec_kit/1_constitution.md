@@ -38,7 +38,7 @@ arquitectura** a estudiantes universitarios. Ante cualquier disyuntiva entre
 
 ```
 CAPA 1: FRONT (PHP, :8000)    — solo pinta HTML y llama APIs; NUNCA toca la BD
-CAPA 2: APIs (PHP)            — api_generica :8001 y api_facturas :8022
+CAPA 2: API (PHP)            — api_facturas :8022
 CAPA 3: DATOS                 — PostgreSQL | MariaDB | SQL Server (bdfacturas)
 ```
 
@@ -79,7 +79,7 @@ imagen (`--build`) solo es necesario si cambia el `Dockerfile`.
 
 | Cosa | Convención |
 |---|---|
-| Puertos públicos | front 8020 · api_generica 8021 · api_facturas **8022** |
+| Puertos públicos | front 8020 · · api_facturas **8022** |
 | Puertos de BD hacia el host | PostgreSQL **15452** · MariaDB **13326** · SQL Server **11453** |
 | Hosts internos (entre contenedores) | `postgres:5432` · `mariadb:3306` · `sqlserver:1433` |
 | Credenciales BD | usuario `paradigmas` / clave `paradigmas123` (SQL Server: `sa` / `Paradigmas123!`) |

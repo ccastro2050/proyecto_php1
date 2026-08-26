@@ -17,12 +17,11 @@
 
 | Versión | Carpeta | Qué EXISTE al terminarla | Qué concepto nuevo enseña |
 |---|---|---|---|
-| **v1** | [v1_producto_mariadb/](v1_producto_mariadb/2_spec.md) | SOLO `api_facturas` (PHP puro + PDO) con el CRUD de **producto** contra **MariaDB**. **Nada de front, nada de API genérica, ningún otro motor.** (La BD `bdfacturas` se crea COMPLETA desde el inicio — es infraestructura dada; la API solo toca `producto`.) | Arquitectura en capas con `interface` de PHP desde el día 1 |
+| **v1** | [v1_producto_mariadb/](v1_producto_mariadb/2_spec.md) | SOLO `api_facturas` (PHP puro + PDO) con el CRUD de **producto** contra **MariaDB**. **Nada de front, ningún otro motor.** (La BD `bdfacturas` se crea COMPLETA desde el inicio — es infraestructura dada; la API solo toca `producto`.) | Arquitectura en capas con `interface` de PHP desde el día 1 |
 | **v2** | v2_mas_tablas/ *(se especifica al terminar v1)* | api_facturas con persona, empresa, cliente, vendedor y factura (maestro-detalle + trigger), solo MariaDB | Validación por entidad; FKs, integridad referencial y lógica en la BD |
 | **v3** | v3_segundo_motor/ | Lo mismo, ahora también contra **PostgreSQL** | Nace la configuración de motor y la **fábrica** — abierto/cerrado en acción: cero cambios en controladores y servicios |
 | **v4** | v4_sqlserver_docker/ | Tercer motor (**SQL Server**), las 12 tablas, compose completo | Liskov entre repositorios; contenedores, volúmenes y healthchecks |
-| **v5** | v5_api_generica/ | Se suma la **API Genérica** en PHP (`/api/{tabla}` para cualquier tabla, puerto 8021) | El contraste genérico vs por-entidad sobre la misma BD |
-| **v6** | v6_front/ | Se suma el **frontend PHP** (puerto 8020) que consume las dos APIs | Separación de capas a nivel de sistema; el front no toca la BD |
+| **v5** | v5_front/ | Se suma el **frontend PHP** (puerto 8020) que consume la API | Separación de capas a nivel de sistema; el front no toca la BD |
 
 ## Reglas del trabajo por versiones
 
