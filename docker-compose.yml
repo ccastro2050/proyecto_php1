@@ -14,6 +14,7 @@ services:
 
   # --- MariaDB 11 con la BD bdfacturas COMPLETA (db/init.sql) ---
   mariadb:
+    restart: unless-stopped   # si el PC se reinicia, este servicio revive con Docker
     image: mariadb:11
     environment:
       MARIADB_ROOT_PASSWORD: paradigmas123
@@ -53,6 +54,7 @@ services:
 
   # --- phpMyAdmin (administrador web de MariaDB, también en Docker) ---
   phpmyadmin:
+    restart: unless-stopped   # si el PC se reinicia, este servicio revive con Docker
     image: phpmyadmin:latest
     environment:
       PMA_HOST: mariadb              # a cuál servidor se conecta (nombre del servicio)
