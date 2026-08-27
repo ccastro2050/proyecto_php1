@@ -24,6 +24,56 @@ flecha). PHP nació como lenguaje de scripts y fue incorporando P.O.O. seria
 (clases, interfaces, tipos) hasta el PHP 8 actual — saber cuándo usar cada
 paradigma ES la competencia del curso.
 
+### 1.1 El MISMO problema en tres paradigmas (ejemplo comparado)
+
+Problema: calcular cuánto vale el inventario (la suma de stock × valor de
+cada producto). Mírelo tres veces:
+
+```
+// IMPERATIVO: el CÓMO, paso a paso (así se ve DENTRO de un método)
+$total = 0;
+foreach ($productos as $p) {
+    if ($p['stock'] > 0) {
+        $total += $p['stock'] * $p['valorunitario'];
+    }
+}
+```
+
+```sql
+-- DECLARATIVO: el QUÉ, sin pasos — el motor decide el CÓMO
+SELECT SUM(stock * valorunitario) FROM producto WHERE stock > 0;
+```
+
+```
+// P.O.O.: objetos que colaboran — cada uno con SU responsabilidad
+$servicio = new ServicioProducto(new RepositorioProductoMariaDB($pdo));
+$total = $servicio->valorInventario();  // el servicio le PIDE al repositorio;
+                                        // nadie de afuera ve SQL ni conexiones
+```
+
+Los tres resuelven lo mismo. La diferencia es QUIÉN carga con el detalle:
+en el imperativo usted; en el declarativo el motor; en la P.O.O. cada
+objeto carga con SU parte — y eso es lo que permite cambiar una pieza sin
+tocar las demás.
+
+### 1.2 Dónde vive cada paradigma en ESTE proyecto (Mermaid)
+
+```mermaid
+flowchart TB
+    subgraph PROY["El proyecto api_facturas — multiparadigma a propósito"]
+        ARQ["La ARQUITECTURA<br/>capas · interfaces · objetos que colaboran<br/>═ P.O.O. ═"]
+        MET["DENTRO de cada método<br/>if · for · asignaciones<br/>═ imperativo/estructurado ═"]
+        DECL["El SQL y los modelos de validación<br/>SELECT ... WHERE · reglas de campos<br/>═ declarativo ═"]
+    end
+    ARQ -->|"cada método se escribe con"| MET
+    ARQ -->|"la frontera y los datos se declaran con"| DECL
+```
+
+**Guía de lectura:** los paradigmas no compiten — conviven por niveles. La
+P.O.O. organiza el edificio; el imperativo pone los ladrillos dentro de
+cada método; el declarativo describe datos y consultas. Saber CUÁL usar en
+cada nivel es la competencia, no militar en uno.
+
 ## 2. Los cuatro pilares de la P.O.O.
 
 ### 2.1 Abstracción
@@ -53,6 +103,81 @@ pilar que sostiene todo el proyecto: cualquier clase con
 `implements IRepositorioProducto` puede ocupar el lugar de otra — el MariaDB
 real, el falso en memoria de `pruebas/prueba_capas.php`, o el PostgreSQL que
 llegará en la v3.
+
+### 2.5 Los cuatro pilares, dibujados sobre la v1 (Mermaid)
+
+```mermaid
+classDiagram
+    class IRepositorioProducto {
+        <<interface>>
+        +obtener_todos(limite)
+        +obtener_por_codigo(codigo)
+        +crear(datos)
+        +actualizar(codigo, datos)
+        +eliminar(codigo)
+    }
+    class RepositorioProductoMariaDB {
+        -cadena de conexión (privada)
+        -el SQL parametrizado (privado)
+    }
+    class RepositorioFalsoEnMemoria {
+        -un diccionario en RAM
+    }
+    class ServicioProducto {
+        -repositorio: IRepositorioProducto
+        +reglas de negocio (límite mayor que 0, ...)
+    }
+    RepositorioProductoMariaDB ..|> IRepositorioProducto : POLIMORFISMO
+    RepositorioFalsoEnMemoria ..|> IRepositorioProducto : POLIMORFISMO
+    ServicioProducto o-- IRepositorioProducto : COMPOSICIÓN (recibe, no hereda)
+    note for IRepositorioProducto "ABSTRACCIÓN: declara QUÉ,\nni una línea de CÓMO"
+    note for RepositorioProductoMariaDB "ENCAPSULAMIENTO: la conexión\ny el SQL no salen de aquí"
+```
+
+**Guía de lectura:** los cuatro pilares están en UN dibujo. La interfaz es
+la abstracción; los atributos privados del repositorio son el
+encapsulamiento; las dos flechas punteadas que llegan a la misma interfaz
+son el polimorfismo (piezas intercambiables); y el rombo del servicio es
+composición: recibe el repositorio por constructor en vez de heredarlo.
+
+**Herencia vs composición — el error clásico, dibujado:**
+
+```mermaid
+classDiagram
+    direction LR
+    class ServicioMal["ServicioProducto ❌"]
+    class ServicioBien["ServicioProducto ✅"]
+    ServicioMal --|> RepositorioProductoMariaDB : hereda del CONCRETO: quedó casado con MariaDB
+    ServicioBien o-- IRepositorioProducto : compone la ABSTRACCIÓN: cualquier motor entra
+```
+
+**Guía de lectura:** si el servicio HEREDA del repositorio concreto, cambiar
+de motor exige tocar el servicio (y probar sin BD es imposible). Si lo
+COMPONE a través de la interfaz, el motor se cambia por fuera — esa
+decisión de un solo rombo es la que paga todo el proyecto.
+
+**"Objetos que se mandan mensajes" (Alan Kay) — la v1 como conversación:**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cli as Cliente HTTP
+    participant C as ControladorProducto
+    participant S as ServicioProducto
+    participant R as IRepositorioProducto (interface)
+    participant BD as MariaDB
+    Cli->>C: POST /api/producto (JSON)
+    C->>S: crear(petición ya validada)
+    S->>R: crear(datos)
+    Note over R: aquí responde QUIEN esté detrás de la interfaz:<br/>el repositorio MariaDB real o el falso en memoria
+    R->>BD: INSERT parametrizado
+    BD-->>Cli: y la respuesta se devuelve por la misma cadena
+```
+
+**Guía de lectura:** cada flecha es un MENSAJE entre objetos — ninguno sabe
+CÓMO trabaja el siguiente, solo QUÉ mensaje entiende. Esa era la idea
+original de Alan Kay al acuñar "orientado a objetos": menos árboles de
+herencia, más objetos conversando.
 
 ## 3. La P.O.O. en PHP: lo que este proyecto explota
 
