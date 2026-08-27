@@ -166,11 +166,11 @@ class Gato extends Animal
 
 ```mermaid
 classDiagram
-    Animal <|-- Perro : hereda y SOBRESCRIBE hablar()
-    Animal <|-- Gato : hereda y SOBRESCRIBE hablar()
-    class Animal { +hablar() "..." }
-    class Perro { +hablar() "Guau" }
-    class Gato { +hablar() "Miau" }
+    Animal <|-- Perro : hereda y SOBRESCRIBE
+    Animal <|-- Gato : hereda y SOBRESCRIBE
+    class Animal { +hablar() base }
+    class Perro { +hablar() Guau }
+    class Gato { +hablar() Miau }
 ```
 
 **Cara B — la de ESTE proyecto: contrato + implementaciones.** Aquí NO hay
@@ -229,8 +229,8 @@ classDiagram
     direction LR
     class ServicioMal["ServicioProducto ❌"]
     class ServicioBien["ServicioProducto ✅"]
-    ServicioMal --|> RepositorioProductoMariaDB : hereda del CONCRETO: quedó casado con MariaDB
-    ServicioBien o-- IRepositorioProducto : compone la ABSTRACCIÓN: cualquier motor entra
+    ServicioMal --|> RepositorioProductoMariaDB : hereda del CONCRETO — quedó casado con MariaDB
+    ServicioBien o-- IRepositorioProducto : compone la ABSTRACCIÓN — cualquier motor entra
 ```
 
 **Guía de lectura:** si el servicio HEREDA del repositorio concreto, cambiar
