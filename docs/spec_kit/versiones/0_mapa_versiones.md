@@ -32,7 +32,9 @@
    cero) sin leer nada más.
 3. **El código de una versión no anticipa a la siguiente**: en v1 NO se escribe
    la fábrica multi-motor "por si acaso" — se escribe la interfaz, y la fábrica
-   llegará cuando un segundo motor la justifique (v3). YAGNI con dirección.
+   llegará cuando un segundo motor la justifique (v3). **YAGNI con
+   dirección**: *You Aren't Gonna Need It* ("no lo vas a necesitar") — no se
+   escribe hoy lo que solo hará falta mañana, pero se sabe hacia dónde va.
 4. **Cada versión termina en verde**: criterios de aceptación verificables,
    commit (y tag `v1`, `v2`, …) al cerrarla.
 5. La spec de la versión siguiente **parte del estado real** dejado por la
