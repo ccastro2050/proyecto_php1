@@ -243,7 +243,7 @@ clarify NO crea un archivo: escribe dentro de 2_spec.md
 ```
 
 **A mano, en este curso:** eso es exactamente la
-[sección 6 de 2_spec.md](spec_kit/versiones/v1_producto_mariadb/2_spec.md),
+[la sección de Clarificaciones de 2_spec.md](spec_kit/versiones/v1_producto_mariadb/2_spec.md),
 y el marcador `[NECESITA ACLARACIÓN: …]` (§4.4) hace las veces de
 pregunta. La diferencia no es el resultado, es **quién detecta la
 ambigüedad**: allá la busca el agente; aquí la busca usted — que es
@@ -452,7 +452,7 @@ la anticipación, que es el vicio favorito de la IA.
 **Esqueleto:** `1. Propósito` (dos frases) · `2. Alcance`, con su **NO
 incluye** explícito · `3. Requisitos funcionales` (RF1, RF2…) ·
 `4. Requisitos no funcionales` · `5. Criterios de aceptación`, numerados y
-medibles · `6. Clarificaciones` — **la compuerta 1** (§2.2): cada pregunta
+medibles · `Clarificaciones` — **la compuerta 1** (§2.2): cada pregunta
 con su respuesta, la fecha y qué RF cambió · `7. Definición de TERMINADA`.
 
 
@@ -665,7 +665,7 @@ Las tres compuertas, en detalle:
 
 | | Vive en | La pregunta que hace | Si falla |
 |---|---|---|---|
-| **1. Clarificaciones** | Sección 6 de `2_spec.md` | ¿Hay algo que dos personas leerían distinto? | Se pregunta al dueño del problema y la respuesta se pliega DENTRO de la spec — no se resuelve improvisando en el código |
+| **1. Clarificaciones** | La sección de Clarificaciones de `2_spec.md` | ¿Hay algo que dos personas leerían distinto? | Se pregunta al dueño del problema y la respuesta se pliega DENTRO de la spec — no se resuelve improvisando en el código |
 | **2. Chequeo de constitución** | Última sección de `3_plan.md` | ¿El plan respeta los artículos, uno por uno? ¿Los cinco documentos dicen lo mismo? | O se corrige el plan, o se enmienda la constitución (y sube de versión). Nunca "se deja pasar por esta vez" |
 | **3. Lista de requisitos** | `9_checklist.md` de la versión | ¿Cada requisito es medible, único y verificable? | Se devuelve a la spec. **No se escribe código con la lista en rojo** |
 

@@ -170,3 +170,29 @@ inexistente → 404.
 
 Los 6 criterios pasan → commit + tag `v1` → recién entonces se escribe la spec
 de la v2 ([mapa](../0_mapa_versiones.md)).
+
+## 8. Clarificaciones
+
+> **Qué es esta sección:** el registro de las ambigüedades detectadas ANTES
+> de planear, con la respuesta que se acordó y su razón. Es **la compuerta
+> 1** del método (ver [SDD_SPECKIT](../../../SDD_SPECKIT.md)): mientras
+> quede un `[NECESITA ACLARACIÓN: …]` en los requisitos de arriba, esta
+> versión no pasa a la planeación.
+>
+> Las entradas de abajo se reconstruyeron **al cerrar la versión**, a
+> partir de las decisiones que sus propios contratos ya dejaban fijadas.
+> De aquí en adelante esta sección se llena **en vivo**, antes del
+> `3_plan.md` — que es como debe ser.
+
+| # | La pregunta | La respuesta acordada, con su razón | Dónde quedó |
+|---|---|---|---|
+| C1 | El listado sin filas, ¿es un error o un resultado? | Un resultado: **204 sin cuerpo**. Vacío no es error. | RF de listar · contrato del `GET` |
+| C2 | `?limite=0` o negativo, ¿422 o 400? | **400**: la FORMA del dato es correcta (sí es un entero); lo que se rompe es una regla de negocio. El 422 se reserva para el body mal formado. | Contrato del `GET` · convenciones |
+| C3 | Crear con una llave que ya existe, ¿409 o 500? | **500**, con el error del motor en `detalle`: la llave la defiende la BD, no la API. Convertirlo en 409 sería lógica de negocio que esta versión no pide. | Convenciones de error · contrato del `POST` |
+| C4 | `PATCH` con el body vacío, ¿200 sin hacer nada, o error? | **400**: pedir una actualización sin decir qué actualizar es una regla de negocio rota. | Contrato del `PATCH` |
+
+**Cómo se escribe una entrada nueva:** la pregunta tal como se hizo (no
+"revisar el borrado", sino "¿físico o lógico?"), la respuesta **con su
+razón**, y el documento donde quedó plasmada. Si la respuesta cambia un
+requisito, se corrige el requisito allá arriba: esta sección lo registra,
+no lo reemplaza.

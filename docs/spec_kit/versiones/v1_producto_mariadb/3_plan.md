@@ -190,3 +190,27 @@ oficial de entrega.
 Las de la constitución: todo en español, comentario de apertura por archivo,
 clases PascalCase (prefijo `I` en interfaces), métodos y variables camelCase,
 un archivo por clase, `declare(strict_types=1)` en todo archivo PHP.
+
+## 7. Chequeo de constitución
+
+> **La compuerta 2** del método (ver [SDD_SPECKIT](../../../SDD_SPECKIT.md)):
+> antes de pasar a `8_tasks.md` se revisa la
+> [constitución](../../1_constitution.md) **artículo por artículo**. Si algo
+> no cumple, o se corrige el plan, o se enmienda la constitución. Nunca se
+> deja pasar "por esta vez".
+
+| Artículo | Cómo lo cumple esta versión |
+|---|---|
+| **1** — Propósito didáctico ante todo | Todo en español y comentado para principiantes; se prefiere lo explícito y legible sobre lo compacto. |
+| **2** — PHP puro: sin framework y sin Composer | PHP puro: sin framework y sin Composer. Lo que esta versión agrega no introduce dependencias. |
+| **3** — Arquitectura de 3 capas estricta | Las capas que esta versión construye respetan la separación estricta (§3 de este plan): el front no toca la BD y la API no devuelve HTML. |
+| **4** — Un solo comando para arrancar | `docker compose up -d --build` deja funcionando lo que esta versión declara (§5 de este plan). |
+| **5** — Independencia del motor de base de datos | El acceso a datos pasa por interfaces. Si esta versión trae un solo motor, la independencia todavía es **meta**, no estado. |
+| **6** — Persistencia y reproducibilidad | Los datos viven en volúmenes; `docker compose down -v` devuelve la BD a su estado original. |
+| **7** — Desarrollo con recarga natural | PHP reinterpreta cada petición: guardar el archivo y refrescar es el ciclo, sin reconstruir la imagen. |
+| **8** — Convenciones fijas | Puertos, rutas, sobre de respuesta y catálogo de errores, tal como los fija el artículo. |
+| **9** — Seguridad en su justa medida académica | Credenciales didácticas y sin secretos reales; la seguridad se mantiene en la medida que el artículo define. |
+
+**Complejidad justificada:** si esta versión se desvía de algún artículo,
+la desviación va aquí, con la alternativa más simple que se descartó y por
+qué no sirvió. Sin desviaciones anotadas, se entiende que no las hay.
