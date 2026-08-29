@@ -51,8 +51,8 @@ En la terminal integrada de VS Code (*Terminal → New Terminal*, PowerShell):
 > Stop de Docker Desktop. Solo entonces continúe.
 
 ```powershell
-git clone https://github.com/ccastro2050/proyecto_php.git
-cd proyecto_php
+git clone https://github.com/ccastro2050/proyecto_php1.git
+cd proyecto_php1
 docker compose up -d --build
 ```
 
@@ -124,7 +124,7 @@ siguiendo las especificaciones — con o sin ayuda de IA:
 Qué es cada carpeta y cada archivo, y para qué sirve:
 
 ```
-proyecto_php/
+proyecto_php1/
 ├── docker-compose.yml           # TODO el sistema declarado: MariaDB + API + phpMyAdmin
 │                                #   (el "un solo comando" del proyecto)
 ├── db/

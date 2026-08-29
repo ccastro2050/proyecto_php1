@@ -42,7 +42,7 @@ resto de su PC.
 - **No es una máquina virtual**: no carga un sistema operativo completo —
   comparte el kernel del host con aislamiento de procesos. Por eso arranca en
   segundos y pesa MB, no GB.
-- En la v1: `proyecto_php-mariadb-1` es un contenedor creado desde la imagen
+- En la v1: `proyecto_php1-mariadb-1` es un contenedor creado desde la imagen
   `mariadb:11`, con el puerto interno 3306 **publicado** en el 13326 de su PC
   (`"13326:3306"` en el compose).
 
@@ -213,13 +213,13 @@ Las tres ideas que este archivo demuestra:
 ### Contenedores huérfanos y `--remove-orphans`
 
 Compose recuerda qué contenedores creó para este proyecto (los marca con el
-nombre de la carpeta: `proyecto_php-...`). Si el `docker-compose.yml` **deja
+nombre de la carpeta: `proyecto_php1-...`). Si el `docker-compose.yml` **deja
 de declarar** un servicio que antes existía, su contenedor no se borra solo:
 queda **huérfano** — creado por el proyecto, pero ya sin servicio que lo
 respalde — y Compose lo avisa al arrancar:
 
 ```
-Found orphan containers ([proyecto_php-phpmyadmin-1 ...]) for this project.
+Found orphan containers ([proyecto_php1-phpmyadmin-1 ...]) for this project.
 ```
 
 En este repositorio puede pasar porque el curso es **por versiones**: si una
