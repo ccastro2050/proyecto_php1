@@ -98,7 +98,7 @@ Ejecutar la versión del repo es solo el punto de partida. Lo que se evalúa es
 siguiendo las especificaciones — con o sin ayuda de IA:
 
 > 🤖 ¿Va a trabajar con IA? Siga la **[Guía para construir la versión con
-> IA](docs/GUIA_IA.md)** — cubre los dos caminos con su prompt exacto listo
+> IA](docs/spec_kit/versiones/v1_producto_mariadb/GUIA_IA1.md)** — cubre los dos caminos con su prompt exacto listo
 > para copiar: **chat web** (Gemini, DeepSeek, ChatGPT: qué archivos subirle)
 > e **IDE agéntico** (Antigravity, Cursor, Claude Code: cómo supervisar al
 > agente).
@@ -155,7 +155,8 @@ proyecto_php1/
 ├── docs/
 │   ├── spec_kit/                # LAS ESPECIFICACIONES: constitución permanente +
 │   │                            #   una carpeta de specs por versión (v1, v2, …)
-│   ├── GUIA_IA.md               # Cómo reconstruir la versión desde 0 con ayuda de una IA
+│   │                            #   + la GUIA_IA de ESA versión (GUIA_IA1, GUIA_IA2…):
+│   │                            #   cómo reconstruirla desde 0 con ayuda de una IA
 │   ├── PARADIGMA_POO.md         # Material conceptual: POO, SOLID+capas, ACID,
 │   ├── SOLID_CAPAS_PATRONES.md         #   Docker y SDD (un .md por tema)
 │   ├── PRINCIPIOS_ACID.md       #

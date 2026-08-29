@@ -6,7 +6,7 @@
 búsqueda web apagada
 **Qué se probó:** construir la **v1 completa** (API de facturación en PHP
 puro + MariaDB) desde cero, en una carpeta propia, siguiendo
-[GUIA_IA.md](GUIA_IA.md) al pie de la letra — con el spec kit como única
+[GUIA_IA1.md](spec_kit/versiones/v1_producto_mariadb/GUIA_IA1.md) al pie de la letra — con el spec kit como única
 fuente de la IA.
 
 ---
