@@ -177,7 +177,7 @@ flowchart LR
         N6["6_contracts.md"]
         N7["7_quickstart.md"]
         N8["8_tasks.md"]
-        N9["no existe"]
+        N9["9_checklist.md"]
     end
     subgraph KIT["Spec Kit — generado por comandos"]
         direction TB
@@ -199,9 +199,7 @@ flowchart LR
     N6 --- S6
     N7 --- S7
     N8 --- S8
-    N9 -.-> S9
-    classDef falta fill:#fdd,stroke:#c33,stroke-width:2px
-    class N9,S9 falta
+    N9 --- S9
 ```
 
 Dos diferencias de forma que conviene ver: `contracts` es un
@@ -671,15 +669,15 @@ Las tres compuertas, en detalle:
 | **2. Chequeo de constitución** | Última sección de `3_plan.md` | ¿El plan respeta los artículos, uno por uno? ¿Los cinco documentos dicen lo mismo? | O se corrige el plan, o se enmienda la constitución (y sube de versión). Nunca "se deja pasar por esta vez" |
 | **3. Lista de requisitos** | `9_checklist.md` de la versión | ¿Cada requisito es medible, único y verificable? | Se devuelve a la spec. **No se escribe código con la lista en rojo** |
 
-> **La tercera es la que hoy nos falta.** Es una lista de chequeo **sobre
-> la especificación, no sobre el código**, y las casillas las marca una
-> persona (§3.4). Sus preguntas son de este tipo: *¿cada criterio de
-> aceptación dice un número o un código HTTP concreto? · ¿algún requisito
-> usa "rápido", "amigable" o "eficiente" sin definirlos? · ¿hay dos
-> requisitos que se contradicen? · ¿algún criterio no se puede verificar
-> con un comando?* Es, además, la mejor actividad de aula del método: los
-> estudiantes se revisan la spec entre ellos con la lista, antes de
-> escribir una línea de código.
+> **La tercera vive en el `9_checklist.md` de cada versión**, junto a los
+> otros documentos. Es control de calidad **sobre la ESPECIFICACIÓN, no
+> sobre el código**: *¿cada criterio de aceptación dice un número o un
+> código HTTP concreto? · ¿algún requisito usa "rápido", "amigable" o
+> "eficiente" sin definirlos? · ¿hay dos requisitos que se contradicen? ·
+> ¿algún criterio no se puede verificar con un comando?* Y las casillas
+> las marca **una persona** (§3.4). Es, además, la mejor actividad de aula
+> del método: los estudiantes se revisan la spec entre ellos con la lista,
+> antes de escribir una línea de código.
 
 ### 4.4 Cómo se escribe un requisito que sirve
 
