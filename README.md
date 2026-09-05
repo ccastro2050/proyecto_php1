@@ -192,14 +192,30 @@ proyecto_php1/
 │   ├── TUTORIAL_VSCODE_SQLTOOLS.md  #   con capturas reales
 │   └── img_phpmyadmin/ img_sqltools/  # Las capturas de esos tutoriales
 │
+├── ProyectosDeAula/             # EL MATERIAL DEL PROYECTO DE AULA (no es el ejemplo)
+│   ├── docs/                    #   La metodología —adecuada a PHP— y los cinco
+│   │                            #   documentos de módulo
+│   ├── db_scripts/mysql/        #   El script de la base de cada módulo
+│   └── Mapa_conocimiento/       #   Los datos de referencia y el modelo relacional
+│
 ├── .gitignore / .gitattributes  # Higiene del repo (ignora .session.sql, normaliza EOL)
 └── README.md                    # Este archivo
 ```
 
+> **Ojo con la diferencia**, que es la que más confunde al principio:
+> `ProyectosDeAula/` es **lo que ustedes tienen que construir**; todo lo
+> demás de este repositorio es **el ejemplo con el que se les muestra cómo**.
+> El ejemplo factura productos; el proyecto de aula es otro sistema, con otra
+> base de datos. Lo que se copia es el método, no las tablas.
+
 La regla de lectura: **el sistema vive en `docker-compose.yml`**, la API
 vive en `api_facturas/` (una carpeta por capa), la pantalla en `front_php/`,
-y **todo lo que explica** vive en `docs/`. Cuando lleguen las versiones siguientes, aquí aparecerán
-más carpetas de componentes (y el compose crecerá con ellas).
+y **todo lo que explica** vive en `docs/`. El proyecto de aula, aparte, en
+[`ProyectosDeAula/`](ProyectosDeAula/) — empiece por su
+[metodología](ProyectosDeAula/docs/0_METODOLOGIA.md).
+
+Las versiones siguientes del ejemplo no crecen dentro de este repositorio:
+cada una tiene el suyo (ver la ruta, más abajo).
 
 ## 3. La ruta de versiones
 
