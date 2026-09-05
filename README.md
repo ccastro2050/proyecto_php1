@@ -206,10 +206,14 @@ más carpetas de componentes (y el compose crecerá con ellas).
 ```
 v1  producto de punta a punta: front (8020) + api_facturas (8022) + MariaDB
                                               ← USTED ESTÁ AQUÍ (cerrada: tag v1)
-v2  más tablas (persona, factura maestro-detalle…), con sus pantallas
-v3  segundo motor (PostgreSQL) — nace la fábrica de repositorios
-v4  tercer motor (SQL Server) + compose completo
+v2  seis recursos, integridad y maestro-detalle   repo proyecto_php2
+v3  segundo motor (PostgreSQL) — la fábrica      repo proyecto_php3
+v4  tercer motor (SQL Server) + compose completo repo proyecto_php4
 ```
+
+**Cada versión vive en su propio repositorio**, y no en una rama: así se
+pueden tener dos encendidas al mismo tiempo y compararlas — por eso cada una
+usa puertos propios. La ruta termina en la v4.
 
 **Cada versión incluye su front.** No hay una versión final que "agregue la
 pantalla": una versión no está cerrada si la API responde y la pantalla no
