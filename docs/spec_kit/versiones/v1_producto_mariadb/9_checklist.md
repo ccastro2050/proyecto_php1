@@ -50,6 +50,14 @@
       desenlaces de **ERROR**, no solo el camino feliz.
 - [ ] [5_data_model.md](5_data_model.md) trae los **datos exactos** de los
       que dependen los comandos del smoke test.
+- [ ] **La versión tiene su front especificado**, no solo su API: hay
+      requisitos de lo que la persona ve y hace, y [6_contracts.md](6_contracts.md)
+      dice qué pantalla existe y qué le pide a la API (Artículo 1.1 de la
+      [constitución](../../1_constitution.md)).
+- [ ] Está dicho **qué hace la pantalla cuando la API no responde** — no
+      basta con el camino feliz.
+- [ ] Está dicho **qué hace la pantalla cuando no hay filas**, y que eso no
+      es un error.
 - [ ] Cada decisión de [4_research.md](4_research.md) tiene al menos una
       alternativa descartada con su razón.
 
@@ -61,6 +69,9 @@
       que lo construye en [8_tasks.md](8_tasks.md).
 - [ ] Todo criterio de aceptación tiene su comando en
       [7_quickstart.md](7_quickstart.md), **con el mismo número**.
+- [ ] Cada pantalla de [6_contracts.md](6_contracts.md) §9 usa un endpoint
+      que existe en las secciones de arriba del mismo documento — y ninguna
+      inventa uno.
 - [ ] Los ejemplos de [6_contracts.md](6_contracts.md) usan datos que
       existen en [5_data_model.md](5_data_model.md).
 - [ ] [3_plan.md](3_plan.md) no nombra ningún archivo que ninguna tarea
@@ -73,6 +84,10 @@
 
 - [ ] Ningún documento nombra entidades, motores o pantallas fuera del
       alcance declarado en [2_spec.md](2_spec.md).
+- [ ] **Ninguna ruta es genérica**: no aparece `/api/{tabla}` ni nada que
+      reciba el nombre del recurso como parámetro, ni en la API ni en el
+      cliente del front (Artículo 10 de la
+      [constitución](../../1_constitution.md)).
 - [ ] Ningún documento anticipa una versión futura (Artículo 1 de la
       [constitución](../../1_constitution.md): lo que no pide esta versión, no se
       escribe).

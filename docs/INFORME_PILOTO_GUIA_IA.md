@@ -75,8 +75,16 @@ Cada tropiezo real del piloto se convirtió en un cambio de la guía:
 
 - [x] Fases 0 a 6: los 12 archivos construidos y pegados.
 - [ ] **Smoke test final** (`7_quickstart.md` con puertos +100): arranque
-      con un solo comando, los 6 criterios de aceptación, y el contraste
+      con un solo comando, los criterios de aceptación, y el contraste
       PUT=422 / PATCH=200.
+
+> **Nota posterior:** este piloto se corrió cuando la v1 era **solo la API**
+> y el front estaba planeado para una v5. La v1 ahora incluye su pantalla
+> (Artículo 1.1 de la constitución), así que son 10 criterios y no 6, y el
+> andamiaje de la guía crea también `front_php\`. Lo que el piloto encontró
+> —los choques de puertos, el texto pegado en la terminal, el compose que
+> confundió los dos proyectos— sigue valiendo igual, y por eso el informe se
+> conserva tal como se escribió.
 - [ ] **Pruebas trampa de la revisión de código**: `POST` con
       `{"stock": 7.5}` y con `codigo` numérico — el contrato exige 422; si
       el código del chat responde otra cosa, se le pide la corrección

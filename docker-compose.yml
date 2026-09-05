@@ -1,14 +1,19 @@
 ﻿# ==============================================================
-# Proyecto PHP — versión 1: api_facturas (PHP puro) + MariaDB
+# Proyecto PHP — versión 1: front + API de facturas + MariaDB
 #
-#   Navegador → API FACTURAS (PHP, :8022) → MariaDB (bdfacturas)
-#   Navegador → phpMyAdmin  (:8101) ──────→ MariaDB (administración)
+#   Navegador → FRONT PHP (:8020) → API FACTURAS (:8022) → MariaDB
+#   Navegador → phpMyAdmin (:8101) ──────────────────────→ MariaDB
 #
 # Uso: docker compose up -d --build     (UN solo comando)
 # Reset de la BD: docker compose down -v && docker compose up -d
 #
-# Este archivo CRECE por versiones: v3 suma PostgreSQL, v4 SQL
-# Server, v5 el front.
+# LAS FLECHAS DICEN LA ARQUITECTURA. Fíjese en que del front NO sale ninguna
+# flecha hacia MariaDB, y que eso no es un dibujo bonito: es lo que este
+# archivo hace cumplir. `front-php` no tiene ni las credenciales de la base ni
+# el `depends_on` que la mencione, así que aunque alguien escribiera un
+# `new PDO(...)` en el front, no tendría ni con qué ni a dónde conectarse.
+#
+# Este archivo CRECE por versiones: v3 suma PostgreSQL y v4 SQL Server.
 # ==============================================================
 services:
 
@@ -51,6 +56,23 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy   # arranca cuando la BD RESPONDE, no por azar
+
+  # --- Front Facturas v1 — PHP puro, la pantalla del usuario ---
+  front-php:
+    build: ./front_php
+    volumes:
+      - ./front_php:/app           # el código montado: guardar un .php = refrescar
+    restart: unless-stopped
+    ports:
+      - "8020:8020"                # http://localhost:8020
+    environment:
+      # Lo ÚNICO que el front necesita saber: dónde está la API. Ni DB_DSN, ni
+      # usuario, ni clave de la base — no las tiene porque no las puede usar.
+      URL_API: http://api-facturas:8022
+      #        ↑ el NOMBRE DEL SERVICIO, no localhost: dentro de un contenedor
+      #          localhost es el contenedor mismo, y ahí no hay ninguna API.
+    depends_on:
+      - api-facturas               # y NO mariadb: el front no sabe que existe
 
   # --- phpMyAdmin (administrador web de MariaDB, también en Docker) ---
   phpmyadmin:

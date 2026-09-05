@@ -76,14 +76,18 @@ producto` debe dar **8**.
 
 ## 4. Qué toca la API en cada versión (la BD no cambia)
 
-| Versión | Tablas que usa la API |
+| Versión | Tablas que usa el código (API **y** pantalla) |
 |---|---|
 | **v1** | `producto` — nada más |
 | v2 | + persona, empresa, cliente, vendedor, factura, productosporfactura (el trigger que ya vive en la BD empieza a trabajar) |
 | v3–v4 | las mismas, contra más motores |
-| v5 | el front las mostrará todas (v6) |
-| v6 | el front las ve a través de las APIs |
 
-**Regla de la v1:** el código solo puede nombrar la tabla `producto`. Que las
-otras 11 existan no es invitación a usarlas — eso es alcance de las versiones
+La columna dice «API **y** pantalla» a propósito: cada versión trae el front
+de las tablas que agrega (Artículo 1.1 de la
+[constitución](../../1_constitution.md)). No hay una versión final que
+«muestre todo lo demás».
+
+**Regla de la v1:** el código —el de la API y el del front— solo puede
+nombrar la tabla `producto`. Que las otras 11 existan no es invitación a
+usarlas — eso es alcance de las versiones
 siguientes.

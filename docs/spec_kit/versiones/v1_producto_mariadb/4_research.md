@@ -1,4 +1,4 @@
-# Investigación y decisiones — Versión 1: producto + MariaDB (PHP puro)
+# Investigación y decisiones — Versión 1: producto de punta a punta
 
 > **Versión 1** · **Lectura opcional** (el porqué de las decisiones del plan,
 > con las alternativas que se evaluaron y descartaron). Complementa a
@@ -97,13 +97,85 @@ nginx + PHP-FPM — fuera del alcance (documentado). El compose además monta el
 código como volumen: guardar un `.php` = refrescar el navegador, porque PHP
 reinterpreta cada petición (ni siquiera existe "reload").
 
-## D8 — Docker compose desde la v1 (dos servicios)
+## D8 — Docker compose desde la v1 (tres servicios)
 
 **Alternativa descartada:** `docker run` a mano para la BD y PHP local como
 única forma de correr.
-**Decisión:** `docker-compose.yml` con `mariadb` + `api-facturas` desde v1 —
-`docker compose up -d --build` deja todo funcionando.
+**Decisión:** `docker-compose.yml` con `mariadb` + `api-facturas` +
+`front-php` desde v1 — `docker compose up -d --build` deja todo funcionando.
 **Por qué:** el Artículo 4 de la constitución ("un solo comando") es
 permanente — y la constitución gana. El compose de v1 es mínimo y **crece por
-versiones** (v3 suma MariaDB, v4 SQL Server…): la infraestructura también se
-construye por incrementos.
+versiones** (v3 suma PostgreSQL, v4 SQL Server…): la infraestructura también
+se construye por incrementos.
+
+## D9 — El front se hace en la v1, no en una versión final
+
+**Alternativa descartada:** la que este proyecto tenía escrita hasta ahora —
+API en v1 a v4 y **el front al final, en una v5**.
+**Decisión:** cada versión incluye su front; la v1 entrega las pantallas de
+`producto` (Artículo 1.1 de la constitución).
+**Por qué, y esto es un cambio de criterio, no un detalle:**
+
+- Los desajustes entre lo que la API devuelve y lo que la pantalla necesita
+  aparecen **el día que alguien pinta una tabla**. Con el front al final, ese
+  día llega con cuatro versiones de API encima: lo que en la v1 era corregir
+  en diez minutos, allá es rehacer.
+- Una API sin pantalla **se cree terminada sin estarlo**. Un `curl` que
+  responde 200 no dice si el dato sirve; la pantalla obliga a decidir qué se
+  muestra, cómo se dice el error en español y qué pasa cuando no hay filas.
+- Y sobre todo: **la separación de capas del Artículo 3 no se puede
+  demostrar sin front.** El criterio 10 —apagar la API con la base encendida
+  y ver que la pantalla no muestra ni una fila— es la única prueba de que son
+  dos procesos y no uno partido en dos carpetas.
+
+**Precio asumido:** cada versión es más trabajo, y hay que aprender dos
+oficios a la vez. A cambio, cada versión entrega algo que un humano puede
+usar, no un endpoint que hay que creerle a Postman.
+
+## D10 — El front también en PHP puro, con plantillas y sin JavaScript
+
+**Alternativas descartadas:** una página con JavaScript que llame a la API
+desde el navegador (SPA a mano), o un motor de plantillas como Twig.
+**Decisión:** PHP renderiza el HTML **en el servidor**; el navegador recibe
+páginas terminadas y manda formularios corrientes. Las plantillas son
+archivos `.php` con `require`.
+**Por qué:** con JavaScript, quien llama a la API es el **navegador**, y
+entonces el criterio 10 cambia de significado —hay que hablar de CORS, de
+promesas y de errores asíncronos antes de haber enseñado qué es una capa—.
+Con render en el servidor, la petición a la API la hace **el proceso del
+front**, que es exactamente el dibujo de la arquitectura. Twig, por su parte,
+metería Composer, que el Artículo 2 prohíbe.
+**Y un beneficio que no se esperaba:** como todo son formularios, la prueba
+de humo puede **recorrer el sistema completo sin manos** — crear, guardar de
+las dos maneras y eliminar. En los fronts de Blazor de otros cursos eso no se
+puede: los clics viajan por una conexión persistente. La tecnología más
+sencilla resultó ser la más fácil de probar.
+
+## D11 — `cliente_api.php` trabaja con arrays, no con las clases de la API
+
+**Alternativa descartada, y hay que nombrarla porque es tentadora:**
+`require_once __DIR__ . '/../api_facturas/modelos/Producto.php';` para usar
+en el front la clase `Producto` que ya existe. **Funcionaría.**
+**Decisión:** el front trabaja con los arrays que `json_decode` devuelve.
+**Por qué:** ese `require` los volvería un solo programa repartido en dos
+carpetas. Renombrar un método adentro de la API rompería la pantalla **sin
+que nadie tocara el contrato** — y el contrato es lo único que deberían
+compartir. Además el front no podría existir en otro lenguaje ni en otra
+máquina, que es la mitad del sentido de tener una API.
+**Precio asumido:** se pierde el autocompletado y los tipos del lado del
+front. Es un precio real, y es el correcto: en este proyecto la tentación es
+mayor que en otros porque los dos están en PHP, y por eso la regla se escribe
+en vez de darse por obvia.
+
+## D12 — El aviso viaja en la sesión, y después de guardar se redirige
+
+**Alternativa descartada:** pintar el listado directamente en la respuesta
+del POST, sin redirigir.
+**Decisión:** *post/redirect/get* — se guarda, se deja el aviso en
+`$_SESSION` y se redirige al listado, que lo muestra una vez y lo borra.
+**Por qué:** sin redirección, refrescar la página del navegador **vuelve a
+enviar el formulario** y crea el producto dos veces; el navegador incluso lo
+advierte con un cuadro de diálogo que nadie lee. Redirigir hace que la última
+dirección visitada sea un GET inocuo. El precio es que la redirección pierde
+la memoria, y de ahí sale la sesión: dos funciones, `redirigir_con()` y
+`aviso_pendiente()`.

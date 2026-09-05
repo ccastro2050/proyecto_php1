@@ -57,23 +57,37 @@ docker compose up -d --build
 ```
 
 **Eso es todo.** La primera vez tarda unos minutos (descarga imágenes). Al
-terminar quedan corriendo la base de datos (bdfacturas completa en MariaDB) y
-la API:
+terminar queda corriendo el sistema completo:
 
 | Qué | Dónde |
 |---|---|
+| **La pantalla** — empiece por aquí | **http://localhost:8020** |
 | **API Facturas** — diagnóstico | http://localhost:8022/ |
-| Listar productos | http://localhost:8022/api/producto |
+| Listar productos (JSON) | http://localhost:8022/api/producto |
 | **phpMyAdmin** (administrar MariaDB desde el navegador) | http://localhost:8101 |
 | MariaDB (para SQLTools/DBeaver, opcional) | `localhost:13326` · `paradigmas`/`paradigmas123` |
 
-Pruebe la joya didáctica de la v1: PUT con solo `{"stock": 99}` → 422; el
-mismo body en PATCH → 200. Esa diferencia es parte de lo que enseña la
-versión (contratos exactos en el spec kit).
+**Empiece por el 8020**, que es como lo ve alguien que no programó esto. Ahí
+está la joya didáctica de la v1: entre a editar un producto, borre el nombre
+y oprima cada uno de los dos botones. «Guardar la ficha completa» lo rechaza;
+«Guardar solo lo que cambié» guarda y **no borra el nombre**. Es el mismo
+formulario: la diferencia está en qué se envía — un PUT o un PATCH.
 
-> ℹ️ Este proyecto usa los puertos 8022, 8101 y 13326: si alguno ya está
-> ocupado en su máquina, cámbielo en `docker-compose.yml` (el lado izquierdo
-> del `"puerto:puerto"`).
+Y la demostración de que son dos procesos, en dos comandos:
+
+```powershell
+docker compose stop api-facturas    # la BASE DE DATOS sigue encendida
+```
+
+Refresque <http://localhost:8020/productos>: la pantalla sigue en pie, con su
+menú y un aviso de que el servicio no está disponible — **y sin una sola
+fila**. Los datos siguen ahí, a un puerto de distancia; si aparecieran, sería
+porque el front llegó a la base por su cuenta. `docker compose start
+api-facturas` y vuelven.
+
+> ℹ️ Este proyecto usa los puertos 8020, 8022, 8101 y 13326: si alguno ya
+> está ocupado en su máquina, cámbielo en `docker-compose.yml` (el lado
+> izquierdo del `"puerto:puerto"`).
 
 ### Los días siguientes (volver a encender)
 
@@ -125,8 +139,8 @@ Qué es cada carpeta y cada archivo, y para qué sirve:
 
 ```
 proyecto_php1/
-├── docker-compose.yml           # TODO el sistema declarado: MariaDB + API + phpMyAdmin
-│                                #   (el "un solo comando" del proyecto)
+├── docker-compose.yml           # TODO el sistema declarado: MariaDB + API + FRONT
+│                                #   + phpMyAdmin (el "un solo comando" del proyecto)
 ├── db/
 │   ├── init.sql                 # Crea bdfacturas COMPLETA (12 tablas, triggers, datos).
 │   │                            #   MariaDB lo ejecuta sola la PRIMERA vez (volumen vacío)
@@ -152,6 +166,17 @@ proyecto_php1/
 │   ├── excepciones/             # NoEncontradoExcepcion (el servicio la lanza → 404)
 │   └── pruebas/                 # prueba_capas.php: repositorio FALSO en memoria
 │                                #   (demuestra que las capas se desacoplan de verdad)
+│
+├── front_php/                   # LA PANTALLA DE LA v1 — PHP puro también (puerto 8020)
+│   ├── Dockerfile               # Su imagen: php:8.3-cli SIN pdo_mysql — la ausencia
+│   │                            #   es la comprobación: no puede llegar a la BD
+│   ├── index.php                # Front controller del front: ruta → pantalla
+│   ├── cliente_api.php          # Lo ÚNICO que habla con la API (y traduce sus errores)
+│   ├── vistas/                  # Las plantillas: el marco, el listado y el formulario
+│   └── publico/                 # estilos.css, escrito a mano (sin CDN)
+│
+├── pruebas_humo/                # humo_front.py: recorre el sistema DESDE LA PANTALLA
+│                                #   y apaga la API para probar que son dos procesos
 ├── docs/
 │   ├── spec_kit/                # LAS ESPECIFICACIONES: constitución permanente +
 │   │                            #   una carpeta de specs por versión (v1, v2, …)
@@ -171,19 +196,27 @@ proyecto_php1/
 ```
 
 La regla de lectura: **el sistema vive en `docker-compose.yml`**, la API
-vive en `api_facturas/` (una carpeta por capa), y **todo lo que explica**
-vive en `docs/`. Cuando lleguen las versiones siguientes, aquí aparecerán
+vive en `api_facturas/` (una carpeta por capa), la pantalla en `front_php/`,
+y **todo lo que explica** vive en `docs/`. Cuando lleguen las versiones siguientes, aquí aparecerán
 más carpetas de componentes (y el compose crecerá con ellas).
 
 ## 3. La ruta de versiones
 
 ```
-v1  api_facturas (PHP puro): CRUD de producto, solo MariaDB   ← USTED ESTÁ AQUÍ (cerrada: tag v1)
-v2  más tablas (persona, factura maestro-detalle…)
+v1  producto de punta a punta: front (8020) + api_facturas (8022) + MariaDB
+                                              ← USTED ESTÁ AQUÍ (cerrada: tag v1)
+v2  más tablas (persona, factura maestro-detalle…), con sus pantallas
 v3  segundo motor (PostgreSQL) — nace la fábrica de repositorios
 v4  tercer motor (SQL Server) + compose completo
-v5  frontend PHP
 ```
+
+**Cada versión incluye su front.** No hay una versión final que "agregue la
+pantalla": una versión no está cerrada si la API responde y la pantalla no
+(Artículo 1.1 de la constitución). Antes este proyecto lo tenía al revés, con
+el front en una v5, y se cambió por una razón concreta: los desajustes entre
+la API y la pantalla aparecen el día que alguien pinta una tabla — y
+descubrirlos con cuatro versiones de API encima ya no es corregir, es
+rehacer.
 
 La regla del juego: la **constitución** es permanente, cada versión tiene su
 propia spec, y una versión está TERMINADA solo cuando pasa sus criterios de
@@ -195,11 +228,11 @@ aceptación (se cierra con tag). Detalle completo:
 | Documento | Qué contiene |
 |---|---|
 | [Constitución](docs/spec_kit/1_constitution.md) | Las reglas permanentes del proyecto (PHP puro, capas, un comando) |
-| [2_spec.md](docs/spec_kit/versiones/v1_producto_mariadb/2_spec.md) | QUÉ construir y los 6 criterios de aceptación |
+| [2_spec.md](docs/spec_kit/versiones/v1_producto_mariadb/2_spec.md) | QUÉ construir y los 10 criterios de aceptación |
 | [3_plan.md](docs/spec_kit/versiones/v1_producto_mariadb/3_plan.md) | CÓMO: stack, carpetas, capas e interfaces |
 | [4_research.md](docs/spec_kit/versiones/v1_producto_mariadb/4_research.md) | Las decisiones y sus alternativas descartadas *(lectura opcional)* |
 | [5_data_model.md](docs/spec_kit/versiones/v1_producto_mariadb/5_data_model.md) | La BD completa (dada) y la tabla `producto` que usa la v1 |
-| [6_contracts.md](docs/spec_kit/versiones/v1_producto_mariadb/6_contracts.md) | Los 7 endpoints con formatos exactos (5 verbos HTTP) |
+| [6_contracts.md](docs/spec_kit/versiones/v1_producto_mariadb/6_contracts.md) | Los 7 endpoints (5 verbos HTTP) y las 5 pantallas, con formatos exactos |
 | [7_quickstart.md](docs/spec_kit/versiones/v1_producto_mariadb/7_quickstart.md) | Smoke test para validar lo construido |
 | [8_tasks.md](docs/spec_kit/versiones/v1_producto_mariadb/8_tasks.md) | Las fases de construcción, en orden |
 

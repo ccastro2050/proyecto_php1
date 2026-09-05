@@ -1,4 +1,4 @@
-# Plan técnico — Versión 1: producto + MariaDB (PHP puro)
+# Plan técnico — Versión 1: producto de punta a punta (front + API + MariaDB)
 
 > **Versión 1** · CÓMO construir lo especificado en [2_spec.md](2_spec.md).
 > El porqué de cada decisión: [4_research.md](4_research.md) · contratos
@@ -16,15 +16,31 @@
 | Enrutamiento | Front controller `index.php` (comparaciones simples de ruta con `if`) | Un router legible completo ES la lección |
 | Acceso a datos | **PDO** (extensión `pdo_mysql`) con prepared statements | SQL visible y parametrizado; PDO es el estándar del lenguaje |
 | Servidor (desarrollo) | **PHP built-in server** (`php -S 0.0.0.0:8022 index.php`) | Todo pasa por el front controller sin configurar Apache/nginx; suficiente y transparente para el curso |
-| Contenedor | `php:8.3-cli` + `docker-php-ext-install pdo_mysql` | Imagen oficial; la extensión de MySQL/MariaDB se compila en el build |
+| Contenedor de la API | `php:8.3-cli` + `docker-php-ext-install pdo_mysql` | Imagen oficial; la extensión de MySQL/MariaDB se compila en el build |
+| **Front** | **PHP puro también**, con su propio front controller y plantillas `.php` | Un solo lenguaje en todo el proyecto: lo que se aprende del lado de la API sirve del lado de la pantalla |
+| **El front habla con la API** | **cURL** (extensión `curl`, viene en la imagen) | Es la forma canónica de PHP de hacer una petición HTTP saliente, y deja el verbo y el body a la vista |
+| Contenedor del front | `php:8.3-cli` **sin `pdo_mysql`** | La ausencia no es un olvido: **es la comprobación**. Ese proceso no puede llegar a MariaDB ni queriendo |
+| Estilos | Un `.css` escrito a mano | Sin CDN ni framework: el curso no corre sin internet, y una hoja de estilos legible es contenido |
 
 ## 2. Estructura de carpetas
 
 ```
 (raíz del proyecto)
-├── docker-compose.yml                # UN comando: mariadb + api-facturas (crece por versiones)
+├── docker-compose.yml                # UN comando: mariadb + api-facturas + front-php
 ├── db/
 │   └── init.sql                      # la BD completa, PROVISTA (se copia, no se genera)
+├── front_php/                        # LA PANTALLA (puerto 8020)
+│   ├── Dockerfile                    # php:8.3-cli — SIN pdo_mysql, a propósito
+│   ├── index.php                     # front controller del front: ruta → pantalla
+│   ├── cliente_api.php               # la ÚNICA pieza que habla HTTP con la API
+│   ├── vistas/
+│   │   ├── plantilla.php             # el marco: cabecera, menú, avisos, pie
+│   │   ├── inicio.php
+│   │   ├── productos_lista.php
+│   │   ├── productos_formulario.php  # sirve para agregar Y para editar
+│   │   └── no_encontrada.php
+│   └── publico/
+│       └── estilos.css               # escrito a mano, sin CDN
 └── api_facturas/
     ├── Dockerfile                    # php:8.3-cli + pdo_mysql (el compose lo construye)
     ├── index.php                     # front controller: recibe TODO y enruta
@@ -47,10 +63,21 @@
         └── prueba_capas.php          # criterio 6: el servicio con un repositorio falso, sin BD
 ```
 
+Y, fuera de los dos programas, el guion que los prueba juntos:
+
+```
+└── pruebas_humo/
+    └── humo_front.py                 # criterios 7 a 10: el recorrido desde la PANTALLA
+```
+
 ## 3. Arquitectura en capas (flujo de una petición)
 
 ```
-HTTP → index.php            (front controller: método + ruta → controlador)
+NAVEGADOR
+     → front_php/index.php      (front controller del FRONT: ruta → pantalla)
+     → cliente_api.php          (la única pieza que habla HTTP hacia afuera)
+     ↓  HTTP + JSON  — aquí termina un proceso y empieza otro
+     → api_facturas/index.php   (front controller de la API: método + ruta → controlador)
      → ControladorProducto  (lee query/body, valida con el modelo → 422,
                              traduce excepciones a códigos HTTP)
      → IServicioProducto    (interfaz — reglas de negocio)
@@ -61,6 +88,11 @@ HTTP → index.php            (front controller: método + ruta → controlador)
 
 **Regla de dependencias:** controlador → servicio → interfaz de repositorio.
 Solo `ensamblador.php` conoce las clases concretas.
+
+**La flecha que no existe:** del front a MariaDB no hay ninguna, y esa
+ausencia es la que se comprueba en el criterio 10. Fíjese además en dónde
+está la línea de puntos: el front no llama a una función de la API, le manda
+una **petición HTTP**. Son dos programas que solo comparten el JSON.
 
 ## 4. Decisiones de diseño clave
 
@@ -159,10 +191,81 @@ DELETE FROM producto WHERE codigo = :codigo
    por verbo (405 si el verbo no aplica).
 5. El body JSON se lee UNA vez: `json_decode(file_get_contents('php://input'), true)`.
 
+### 4.7 El diseño del front (`front_php`)
+
+Tres piezas, y cada una tiene UN trabajo. Es la misma idea de capas de la
+API, sin ceremonia:
+
+| Archivo | Su único trabajo | Lo que NO hace |
+|---|---|---|
+| `cliente_api.php` | Hablar HTTP con la API y devolver siempre `['ok', 'datos', 'errores']` | No pinta HTML, no conoce sesiones |
+| `index.php` | Mirar la ruta, llamar al cliente y elegir la vista | No arma SQL, no arma JSON a mano |
+| `vistas/*.php` | Pintar | No llaman a la API |
+
+**`cliente_api.php` es el repositorio del front.** Igual que el repositorio es
+la única pieza de la API que sabe que detrás hay MariaDB, éste es la única
+que sabe que los datos vienen por HTTP. Y es el **único sitio del front que
+conoce el formato del error de la API**: si mañana el sobre cambia, se cambia
+aquí y en ninguna vista.
+
+Devuelve siempre la misma forma, para que una vista pregunte «¿salió bien?» y
+no «¿fue 200 o 204?»:
+
+```php
+['ok' => bool, 'datos' => mixed, 'errores' => string[]]
+```
+
+**Una función por operación, con el nombre del recurso adentro**
+(`listar_productos`, `crear_producto`, …) — no una `listar($tabla)` genérica.
+Es el Artículo 10 de la constitución aplicado del lado del front: cuando la
+v2 traiga más tablas habrá más funciones, no un parámetro más.
+
+**El 204 no es un error.** `listar_productos()` lo traduce a
+`['ok' => true, 'datos' => []]`, y la pantalla muestra su recuadro de
+«todavía no hay ninguno». Confundir «no hay filas» con «algo falló» es el
+error más común al consumir una API, y aquí queda resuelto en un solo sitio.
+
+**Y la distinción que importa:** `llamar_api()` devuelve `null` cuando **no
+hubo respuesta** —API caída, tiempo agotado—, que es distinto de «respondió
+con un error». Un 404 es la API funcionando y diciendo que ese producto no
+existe; un `null` es que no hay con quién hablar. De esa diferencia sale el
+aviso del criterio 10.
+
+#### Los avisos entre pantallas
+
+Después de guardar se **redirige** al listado (patrón *post/redirect/get*:
+así refrescar la página no vuelve a guardar). Pero una redirección pierde
+todo lo que hubiera en memoria, así que el aviso viaja en la **sesión de
+PHP**, se muestra una vez y se borra. Dos funciones, `redirigir_con()` y
+`aviso_pendiente()`, y ya.
+
+#### La conversión de texto a número
+
+Un formulario HTML **solo produce texto**: el «12» que la persona escribió
+llega como `"12"`. El contrato pide un número, y un número entre comillas no
+es un número — la API lo rechazaría **siendo correcto**. Por eso el front
+tiene `a_numero()`.
+
+Parece validación del lado del cliente, y hay que ser preciso porque no lo
+es: **ajusta la FORMA del dato, que es trabajo del front, y no juzga su
+VALOR, que es trabajo de la API.** Si alguien escribió «doce», eso viaja como
+«doce» y la API dice que no sirve.
+
+#### Los dos botones del formulario
+
+El mismo formulario, dos comportamientos, y la diferencia **no la decide
+ningún `if` de negocio: la decide qué se envía.** Según el botón que se
+oprimió, el front arma el cuerpo con los tres campos —vayan llenos o no, que
+es un reemplazo— o solo con los diligenciados.
+
+Por eso «Guardar la ficha completa» con el nombre en blanco se rechaza y
+«Guardar solo lo que cambié» con el mismo formulario a medio llenar sí
+guarda. Es RF4 contra RF5, visto desde donde se usa.
+
 ## 5. Docker: un solo comando desde v1
 
 La constitución (Artículo 4) manda: `docker compose up -d --build` deja TODO
-funcionando. En v1 eso son **dos servicios**:
+funcionando. En v1 eso son **tres servicios**:
 
 ```yaml
 services:
@@ -173,12 +276,30 @@ services:
     # command: php -S 0.0.0.0:8022 index.php
     # DB_DSN apunta al host interno "mysql:host=mariadb;port=3306;..."
     # depends_on: mariadb con condition: service_healthy
+  front-php:           # build: ./front_php
+    # puerto 8020 · URL_API=http://api-facturas:8022  ← el NOMBRE DEL SERVICIO
+    # depends_on: api-facturas   ...y NADA de mariadb
 volumes:
   mariadbdata:
 ```
 
+**Dos detalles del servicio del front que valen por un párrafo de teoría:**
+
+- `URL_API` usa `http://api-facturas:8022`, el **nombre del servicio**, no
+  `localhost`. Dentro de un contenedor, `localhost` es el contenedor mismo —
+  y ahí no hay ninguna API.
+- El front **no recibe `DB_DSN`, ni usuario, ni clave**, y su `depends_on` no
+  nombra a `mariadb`. Así el Artículo 3 deja de ser una regla que alguien
+  puede olvidar y pasa a ser algo que el sistema **no permite**: aunque
+  alguien escribiera un `new PDO(...)` en el front, no tendría ni con qué ni
+  a dónde conectarse. Y su imagen ni siquiera instala `pdo_mysql`.
+
 `api_facturas/Dockerfile`: `php:8.3-cli` → instalar `libpq-dev` y compilar
 `pdo_mysql` → copiar el código → `CMD php -S 0.0.0.0:8022 index.php`.
+
+`front_php/Dockerfile`: `php:8.3-cli` → copiar el código →
+`CMD php -S 0.0.0.0:8020 index.php`. **Sin ninguna extensión de base de
+datos**, que es justamente el punto.
 
 **Durante la construcción fase a fase** también se puede correr local si se
 tiene PHP 8.3 con pdo_mysql (`php -S localhost:8022 index.php` con las
@@ -202,14 +323,16 @@ un archivo por clase, `declare(strict_types=1)` en todo archivo PHP.
 | Artículo | Cómo lo cumple esta versión |
 |---|---|
 | **1** — Propósito didáctico ante todo | Todo en español y comentado para principiantes; se prefiere lo explícito y legible sobre lo compacto. |
+| **1.1** — Una versión incluye SU FRONT | Cumple: `front_php` se construye en esta misma versión, con las pantallas de `producto`. La versión no se cierra con la API sola. |
 | **2** — PHP puro: sin framework y sin Composer | PHP puro: sin framework y sin Composer. Lo que esta versión agrega no introduce dependencias. |
-| **3** — Arquitectura de 3 capas estricta | Las capas que esta versión construye respetan la separación estricta (§3 de este plan): el front no toca la BD y la API no devuelve HTML. |
+| **3** — Arquitectura de 3 capas estricta | Las tres capas existen y están separadas (§3): el front solo habla HTTP, la API solo devuelve JSON. Y no se queda en la promesa: el compose no le da al front ni credenciales ni dependencia de la base, y su imagen no trae `pdo_mysql` (§5). |
 | **4** — Un solo comando para arrancar | `docker compose up -d --build` deja funcionando lo que esta versión declara (§5 de este plan). |
 | **5** — Independencia del motor de base de datos | El acceso a datos pasa por interfaces. Si esta versión trae un solo motor, la independencia todavía es **meta**, no estado. |
 | **6** — Persistencia y reproducibilidad | Los datos viven en volúmenes; `docker compose down -v` devuelve la BD a su estado original. |
 | **7** — Desarrollo con recarga natural | PHP reinterpreta cada petición: guardar el archivo y refrescar es el ciclo, sin reconstruir la imagen. |
 | **8** — Convenciones fijas | Puertos, rutas, sobre de respuesta y catálogo de errores, tal como los fija el artículo. |
-| **9** — Seguridad en su justa medida académica | Credenciales didácticas y sin secretos reales; la seguridad se mantiene en la medida que el artículo define. |
+| **9** — Seguridad en su justa medida académica | Credenciales didácticas y sin secretos reales. Todo lo que el front pinta pasa por `htmlspecialchars`, que es lo mínimo que se le pide a una pantalla. |
+| **10** — La API es específica, nunca genérica | Cumple de los dos lados: `/api/producto` con sus campos escritos, y en el front una función por operación (`listar_productos`, `crear_producto`, …), no una `listar($tabla)`. |
 
 **Complejidad justificada:** si esta versión se desvía de algún artículo,
 la desviación va aquí, con la alternativa más simple que se descartó y por

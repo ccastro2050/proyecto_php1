@@ -84,13 +84,19 @@ HTTP → código de estado.
 las otras. La prueba viva es el criterio 6 de la v1: el servicio se prueba con
 un repositorio falso (`pruebas/prueba_capas.php`), sin base de datos.
 
-Y el SISTEMA COMPLETO (la meta, v6) repite el patrón a lo grande:
+Y el SISTEMA repite el patrón a lo grande — **desde la v1**, no como meta:
 
 ```
-CAPA 1: FRONT (v6)      → solo pinta y llama APIs
-CAPA 2: APIs (v1…v5)    → solo JSON
-CAPA 3: DATOS (v1…)     → MariaDB → +PostgreSQL → +SQL Server
+CAPA 1: FRONT (:8020)   → solo pinta y llama la API; nunca toca la BD
+CAPA 2: API   (:8022)   → solo JSON
+CAPA 3: DATOS           → MariaDB → +PostgreSQL (v3) → +SQL Server (v4)
 ```
+
+Y aquí la separación tampoco es una promesa: se apaga la API **con la base de
+datos encendida** y la pantalla sigue respondiendo, con su aviso y sin una
+sola fila. Si el front pudiera llegar a la base por su cuenta, los datos
+seguirían apareciendo. Ésa es la prueba, y solo se puede hacer si la versión
+trae su front.
 
 ### 1.1 ¿Y los MODELOS? ¿Por qué no aparecen como capa?
 

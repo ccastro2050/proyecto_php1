@@ -1,4 +1,4 @@
-# Tareas — Versión 1: api_facturas con producto + MariaDB (PHP puro)
+# Tareas — Versión 1: producto de punta a punta (front + API + MariaDB)
 
 > **Versión 1** · El orden de construcción, partiendo de CERO. Cada fase termina
 > en algo **verificable**. Requisitos: [2_spec.md](2_spec.md) · técnica:
@@ -17,6 +17,9 @@
       [3_plan.md](3_plan.md) §5) y levantarlo: `docker compose up -d`.
 - [ ] Crear la carpeta `api_facturas/` con subcarpetas `modelos/`,
       `controladores/`, `servicios/`, `repositorios/` y `excepciones/`.
+- [ ] Crear la carpeta `front_php/` con `vistas/` y `publico/`. **Ahora, no
+      al final**: la versión incluye su pantalla (Artículo 1.1), y una
+      carpeta vacía a la vista recuerda que falta la mitad del trabajo.
 
 **Verificar:** un cliente SQL (HeidiSQL/DBeaver a `localhost:13326`) ve las
 **12 tablas** y `SELECT count(*) FROM producto` da **8**.
@@ -92,12 +95,62 @@ PUT vs PATCH con `{"stock": 7}` (422 vs 200).
       `depends_on` con `condition: service_healthy`.
 
 **Verificar:** `docker compose down` y luego `docker compose up -d --build`
-— UN comando deja BD y API funcionando (criterio 1 de la spec); editar un
-`.php`, guardar y refrescar muestra el cambio sin reiniciar nada.
+— UN comando deja BD y API funcionando; editar un `.php`, guardar y refrescar
+muestra el cambio sin reiniciar nada. (El criterio 1 completo se cierra en la
+fase 7, cuando el front entre al compose.)
 
-## Fase 7 — Cierre de la versión
-- [ ] Correr el smoke test completo de [7_quickstart.md](7_quickstart.md) §2 —
-      equivale a los 6 criterios de aceptación de [2_spec.md](2_spec.md) §5.
+## Fase 7 — El front: la pantalla de producto
+
+> Aquí empieza la otra mitad de la versión. Se construye **contra la API que
+> ya responde**, y por eso los desajustes salen ahora y no en la v5.
+
+- [ ] `front_php/cliente_api.php`: `URL_API` desde el entorno,
+      `llamar_api($metodo, $ruta, $cuerpo)` con cURL —que devuelve **`null`
+      cuando no hubo respuesta**—, `mensajes_de_error()` (el único sitio que
+      conoce el sobre de error de la API) y **una función por operación**:
+      `listar_productos`, `obtener_producto`, `crear_producto`,
+      `reemplazar_producto`, `actualizar_producto`, `eliminar_producto`.
+      Todas devuelven `['ok', 'datos', 'errores']`, y el **204 es
+      `ok = true` con la lista vacía** ([3_plan.md](3_plan.md) §4.7).
+- [ ] `front_php/index.php`: el front controller del front —
+      `redirigir_con()`, `aviso_pendiente()`, `pintar()`, las rutas de
+      [6_contracts.md](6_contracts.md) §9, la rama de los dos botones según
+      `$_POST['verbo']`, `a_numero()` y el 404 con el marco puesto.
+- [ ] `front_php/vistas/`: `plantilla.php` (cabecera, menú, avisos, pie),
+      `inicio.php`, `productos_lista.php`, `productos_formulario.php` (sirve
+      para agregar Y para editar: el código va de solo lectura al editar, y
+      aparecen los **dos** botones) y `no_encontrada.php`.
+      **Todo lo que se pinte pasa por `htmlspecialchars`.**
+- [ ] `front_php/publico/estilos.css`: escrito a mano, sin CDN.
+- [ ] `front_php/Dockerfile`: `php:8.3-cli`, copiar el código,
+      `CMD php -S 0.0.0.0:8020 index.php`. **Sin `pdo_mysql`** — la ausencia
+      es la comprobación.
+- [ ] Agregar al `docker-compose.yml` el servicio `front-php`: puerto 8020,
+      `URL_API=http://api-facturas:8022` (el **nombre del servicio**) y
+      `depends_on: api-facturas`. **Sin `DB_DSN`, sin credenciales y sin
+      nombrar a `mariadb`.**
+
+**Verificar:** `http://localhost:8020/productos` muestra los 8 productos
+(criterio 7), y el recorrido de [7_quickstart.md](7_quickstart.md) §3.2
+—agregar, los dos botones, eliminar— funciona desde el navegador (criterio 8).
+
+## Fase 8 — La prueba de los dos procesos
+
+- [ ] `pruebas_humo/humo_front.py`: el guion que recorre las pantallas, hace
+      el ciclo completo con los mismos POST que manda el navegador, revisa
+      que ninguna pantalla hable en jerga (criterio 9) y **apaga la API para
+      comprobar que la pantalla sigue en pie sin datos** (criterio 10).
+
+**Verificar:** `python pruebas_humo/humo_front.py` termina en verde.
+
+> Si la pantalla siguiera mostrando productos con la API apagada, la versión
+> estaría mal aunque todo lo demás funcione: querría decir que el front llegó
+> a la base por su cuenta. Es la comprobación del Artículo 3, y no hay otra
+> forma de hacerla.
+
+## Fase 9 — Cierre de la versión
+- [ ] Correr el smoke test completo de [7_quickstart.md](7_quickstart.md) —
+      los **10** criterios de aceptación de [2_spec.md](2_spec.md) §5.
 - [ ] `.gitignore` (`*.session.sql`, archivos de IDE).
 - [ ] Commit y tag `v1`.
 

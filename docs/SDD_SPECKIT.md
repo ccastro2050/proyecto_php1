@@ -553,9 +553,16 @@ escribirlo directamente.
 **6. `6_contracts.md` — el contrato HTTP exacto.**
 **Qué es:** endpoint por endpoint: verbo, URL, body de ejemplo y TODOS los
 códigos de respuesta con su JSON exacto.
-**Para qué sirve:** es lo que un cliente (el front futuro, Postman, el
-profesor) puede EXIGIR sin leer el código; al cerrar la versión, estos
-contratos se congelan.
+**Para qué sirve:** es lo que un cliente (el front de esta misma versión,
+Postman, el profesor) puede EXIGIR sin leer el código; al cerrar la versión,
+estos contratos se congelan.
+
+**Y una sección más, del lado de la pantalla:** como cada versión incluye su
+front (Artículo 1.1 de la constitución), este documento cierra con la tabla
+de **qué pantalla existe, qué le pide a la API y cómo traduce lo que recibe**
+— incluido lo que se ve cuando la API no responde. Sin esa tabla, el contrato
+solo cuenta la mitad: lo que la API devuelve, pero no lo que la persona
+termina leyendo.
 **Cómo se hace:** un bloque por endpoint; incluya los desenlaces de ERROR
 (404, 422, 500) con su formato — el error también es contrato; los valores
 de ejemplo salen de las semillas del 5_data_model.

@@ -1,8 +1,16 @@
-# Contratos HTTP — Versión 1: producto + MariaDB (PHP puro)
+# Contratos — Versión 1: los 7 endpoints y las 5 pantallas
 
-> **Versión 1** · Base: `http://localhost:8022`. En PHP puro no hay Swagger
-> automático: **este documento ES el contrato publicado** (y el endpoint `/`
-> lo enlaza).
+> **Versión 1** · En PHP puro no hay Swagger automático: **este documento ES
+> el contrato publicado** (y el endpoint `/` lo enlaza).
+>
+> | Parte | Base | Secciones |
+> |---|---|---|
+> | **La API** (lo que devuelve) | `http://localhost:8022` | §0 a §8 |
+> | **El front** (lo que se ve) | `http://localhost:8020` | §9 y §10 |
+>
+> Las dos partes están en el mismo documento a propósito: la §9 es la
+> **tabla de traducción** entre una y otra, y separarlas haría que se
+> desincronizaran.
 
 ---
 
@@ -131,3 +139,62 @@ Estos 7 endpoints **no cambian en las versiones siguientes**: v2 agrega
 entidades nuevas (rutas nuevas con este mismo patrón), v3/v4 cambian el motor
 por configuración — si algún cambio futuro rompiera este contrato, es una
 decisión mayor que debe quedar registrada en la spec de esa versión.
+
+Y hay una consecuencia que ahora se puede comprobar: **v3 y v4 no deberían
+tocar ni una línea del front.** Cambiar de motor sin que la pantalla se entere
+es la promesa fuerte del Artículo 5, y hasta ahora era imposible de verificar
+porque no había pantalla.
+
+---
+
+# El front (`http://localhost:8020`)
+
+## 9. Las cinco pantallas, y la traducción
+
+Aquí no hay verbos ni códigos de estado: **el usuario no sabe qué es un 422**.
+Esta tabla es el contrato de la pantalla — y, leída de izquierda a derecha, es
+también la lista de lo que el front traduce.
+
+| Dirección | Qué ve la persona | Qué le pide a la API |
+|---|---|---|
+| `GET /` | El inicio, con el menú | *(nada)* |
+| `GET /productos` | La tabla con Código, Nombre, Stock y Valor unitario | `GET /api/producto?limite=1000` |
+| `GET /productos/nuevo` | El formulario vacío | *(nada)* |
+| `POST /productos/nuevo` | Vuelve al listado con «Se agregó…», o el formulario con lo escrito y los motivos | `POST /api/producto` |
+| `GET /productos/{codigo}/editar` | El formulario con la ficha; el **código de solo lectura** | `GET /api/producto/{codigo}` |
+| `POST /productos/{codigo}/editar` con **«Guardar la ficha completa»** | Vuelve al listado con «Se guardó…» | `PUT /api/producto/{codigo}` con los **tres** campos |
+| `POST /productos/{codigo}/editar` con **«Guardar solo lo que cambié»** | Igual | `PATCH /api/producto/{codigo}` con **solo lo diligenciado** |
+| `POST /productos/{codigo}/eliminar` | Confirma, y vuelve al listado con «Se eliminó…» | `DELETE /api/producto/{codigo}` |
+| cualquier otra | «Esa página no existe» **con el marco de la aplicación** | *(nada)* |
+
+**Fíjese en las dos filas del medio.** Son la misma dirección y el mismo
+formulario; lo único distinto es el botón que se oprimió — y de ahí sale un
+PUT o un PATCH. La diferencia entre RF4 y RF5 no está en una regla de
+negocio: está en **qué se envía**.
+
+**Y en la última:** un `POST` para eliminar, no un enlace. Un enlace que borra
+lo puede disparar el navegador solo al precargar la página.
+
+## 10. Cómo se traduce lo que responde la API
+
+Un solo archivo del front (`cliente_api.php`) conoce esta tabla. Ninguna
+vista la conoce, y por eso el día que la API cambie el sobre se cambia en un
+sitio.
+
+| Lo que responde la API | Lo que hace el front | Lo que ve la persona |
+|---|---|---|
+| `200` con `{tabla, limite, total, datos}` | Se queda con `datos` | La tabla llena |
+| **`204`** (tabla vacía) | `ok = true` con la lista **vacía** | «Todavía no hay productos» y el botón de agregar |
+| `200` de una escritura | `ok = true` | El aviso verde en el listado |
+| `400` / `404` / `500` con `{estado, mensaje, detalle}` | Junta `mensaje` y `detalle` | El aviso rojo, en español |
+| `422` con `{estado, mensaje, errores:[…]}` | Se queda con la lista `errores` | Los motivos, uno por línea, junto al formulario |
+| **Nada** (la API no responde) | `null`, que no es lo mismo que un error | «El servicio no está disponible» — y la pantalla sigue en pie |
+
+**Las dos filas en negrita son las que se equivocan casi siempre:**
+
+- Un **204 no es un error**: es la API diciendo que no hay filas. Confundirlo
+  con un fallo es el error más común al consumir una API.
+- **No responder no es responder mal.** Un 404 es la API funcionando y
+  diciendo que ese producto no existe; que no llegue nada es que no hay con
+  quién hablar. De esa distinción sale el aviso del criterio 10, y por eso
+  `llamar_api()` devuelve `null` en ese caso y no un código inventado.
