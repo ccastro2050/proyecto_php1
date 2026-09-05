@@ -13,14 +13,24 @@
 
 ---
 
-## La ruta (motor primero; el sistema crece componente a componente)
+## La ruta, y dónde vive cada versión
 
-| Versión | Carpeta | Qué EXISTE al terminarla | Qué concepto nuevo enseña |
+**Cada versión vive en su propio repositorio**, no en una rama. La razón es
+práctica: así se pueden tener dos versiones **encendidas al mismo tiempo** y
+compararlas lado a lado — por eso cada una usa puertos propios. Y así ésta
+sigue siendo un ejemplo completo y ejecutable aunque las siguientes ya
+existan.
+
+| Versión | Repositorio | Qué EXISTE al terminarla | Qué concepto nuevo enseña |
 |---|---|---|---|
-| **v1** | [v1_producto_mariadb/](v1_producto_mariadb/2_spec.md) | El CRUD de **producto** de punta a punta: `api_facturas` (PHP puro + PDO) contra **MariaDB** **y su front** (PHP, puerto 8020) con las pantallas de esa tabla. Ningún otro motor, ninguna otra tabla. (La BD `bdfacturas` se crea COMPLETA desde el inicio — es infraestructura dada; el código solo toca `producto`.) | Arquitectura en capas con `interface` de PHP desde el día 1, **y la separación front/API a nivel de sistema** |
-| **v2** | v2_mas_tablas/ *(se especifica al terminar v1)* | persona, empresa, cliente, vendedor y factura (maestro-detalle + trigger), **con sus pantallas**, solo MariaDB | Validación por entidad; FKs, integridad referencial y lógica en la BD |
-| **v3** | v3_segundo_motor/ | Lo mismo, ahora también contra **PostgreSQL** | Nace la configuración de motor y la **fábrica** — abierto/cerrado en acción: cero cambios en controladores, servicios **ni pantallas** |
-| **v4** | v4_sqlserver_docker/ | Tercer motor (**SQL Server**), las 12 tablas, compose completo | Liskov entre repositorios; contenedores, volúmenes y healthchecks |
+| **v1** | **este** ([v1_producto_mariadb/](v1_producto_mariadb/2_spec.md)) | El CRUD de **producto** de punta a punta: `api_facturas` (PHP puro + PDO) contra **MariaDB** **y su front** (PHP, puerto 8020) con las pantallas de esa tabla. Ningún otro motor, ninguna otra tabla. (La BD `bdfacturas` se crea COMPLETA desde el inicio — es infraestructura dada; el código solo toca `producto`.) | Arquitectura en capas con `interface` de PHP desde el día 1, **y la separación front/API a nivel de sistema** |
+| **v2** | [`proyecto_php2`](https://github.com/ccastro2050/proyecto_php2) | + empresa, persona, cliente, vendedor y factura (maestro-detalle + trigger), **con sus pantallas**, solo MariaDB | Llaves foráneas e integridad; maestro-detalle con procedimientos almacenados; el 409 |
+| **v3** | [`proyecto_php3`](https://github.com/ccastro2050/proyecto_php3) | Lo mismo, **sin una funcionalidad nueva**, ahora también contra **PostgreSQL** | Nace la **fábrica** — abierto/cerrado en acción, comprobado con un `diff` |
+| **v4** | [`proyecto_php4`](https://github.com/ccastro2050/proyecto_php4) | Tercer motor (**SQL Server**), los tres a la vez, compose completo | Que el sistema **siga** abierto: aguantar la segunda extensión, no solo la primera |
+
+> **La ruta termina en la v4.** No hay v5: un cuarto motor no enseñaría nada
+> que el tercero no haya mostrado. El porqué está en el mapa de ese
+> repositorio.
 
 > **Antes había una v5 que era «el front».** Ya no: el front de cada versión
 > va **dentro** de esa versión (Artículo 1.1 de la
