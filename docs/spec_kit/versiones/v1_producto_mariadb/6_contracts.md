@@ -165,6 +165,7 @@ también la lista de lo que el front traduce.
 | `POST /productos/{codigo}/editar` con **«Guardar la ficha completa»** | Vuelve al listado con «Se guardó…» | `PUT /api/producto/{codigo}` con los **tres** campos |
 | `POST /productos/{codigo}/editar` con **«Guardar solo lo que cambié»** | Igual | `PATCH /api/producto/{codigo}` con **solo lo diligenciado** |
 | `POST /productos/{codigo}/eliminar` | Confirma, y vuelve al listado con «Se eliminó…» | `DELETE /api/producto/{codigo}` |
+| `GET /publico/…` | Las hojas de estilo y el guion de los avisos | *(nada: los sirve el propio front desde el disco)* |
 | cualquier otra | «Esa página no existe» **con el marco de la aplicación** | *(nada)* |
 
 **Fíjese en las dos filas del medio.** Son la misma dirección y el mismo

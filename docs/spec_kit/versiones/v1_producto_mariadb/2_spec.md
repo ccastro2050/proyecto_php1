@@ -89,9 +89,13 @@ front**— sobre el que las versiones siguientes agregan tablas (v2) y motores
 **No incluye (y es deliberado — ver [mapa de versiones](../0_mapa_versiones.md)):**
 - Endpoints **ni pantallas** para otras entidades (v2) — las otras 11 tablas
   EXISTEN en la BD, pero el código de la v1 solo puede nombrar `producto`.
-- JavaScript en el front: las pantallas son HTML servido por PHP y
-  formularios corrientes. Lo único que hay es un `confirm()` antes de
-  eliminar.
+- Lógica de aplicación en JavaScript: las pantallas son HTML servido por
+  PHP y formularios corrientes. Hay dos usos de JS y ninguno hace falta para
+  que el sistema funcione: el `confirm()` antes de eliminar y el guion de
+  Bootstrap que cierra los avisos con la «x». Quítelos y todo sigue andando.
+- Un framework de front (React, Vue, Blazor): quien llama a la API es **el
+  proceso del front**, no el navegador. Esa es la arquitectura que se está
+  enseñando.
 - Autenticación de usuarios en el front: cualquiera que abra el puerto 8020
   ve las pantallas. Es un entorno de curso, y el Artículo 9 lo dice.
 - Otros motores y la fábrica de repositorios (v3, v4).
@@ -147,12 +151,16 @@ inexistente → 404.
 > La traducción entre las dos cosas es justamente el trabajo del front, y
 > está en [6_contracts.md](6_contracts.md) §9.
 
-#### RF8 — Cada pantalla tiene su propia dirección
+#### RF8 — Cada pantalla tiene su propia dirección, y se ve terminada
 `/` (inicio) · `/productos` (listado) · `/productos/nuevo` (agregar) ·
 `/productos/{codigo}/editar` (editar). Ninguna dirección lleva el nombre de
 la tabla como parámetro: se pueden guardar como marcador y poner en un menú.
 Una dirección que no existe responde 404 **con el marco de la aplicación**,
 no con una página en blanco del servidor.
+
+Y las pantallas llegan **con sus estilos aplicados**: la hoja de Bootstrap y
+la del proyecto se sirven desde el propio front, no desde internet, así que
+un salón sin red ve exactamente lo mismo.
 
 #### RF9 — Ver el catálogo
 `/productos` muestra una tabla con las columnas **Código, Nombre, Stock y
@@ -242,7 +250,11 @@ tocar nada.
 7. `http://localhost:8020/productos` muestra los 8 productos con sus cuatro
    columnas, y cada pantalla responde por su dirección propia (`/`,
    `/productos`, `/productos/nuevo`, `/productos/{codigo}/editar`); una
-   dirección inventada da 404 con el marco de la aplicación.
+   dirección inventada da 404 con el marco de la aplicación. Y las pantallas
+   **se ven con sus estilos**: `/publico/bootstrap.min.css` y
+   `/publico/estilos.css` responden 200 **con tipo de contenido `text/css`**.
+   El criterio dice el tipo y no solo el código porque un 200 que devuelve
+   HTML disfrazado de CSS deja la pantalla igual de fea.
 8. El recorrido completo **desde la pantalla**: agregar un producto → verlo
    en el listado → «Guardar la ficha completa» → dejar el nombre en blanco y
    volver a intentarlo (se rechaza, con el motivo en español) → «Guardar solo
@@ -297,6 +309,7 @@ de la v2 ([mapa](../0_mapa_versiones.md)).
 
 | C5 | El front y la API son los dos PHP: ¿el front puede usar la clase `Producto` de la API con un `require_once`? | **No.** Funcionaría, y por eso hay que decirlo explícito: dejarían de ser dos procesos, y renombrar un método adentro de la API rompería la pantalla sin que nadie tocara el contrato. El front trabaja con **arrays**, que es lo que el JSON trae. | Constitución Art. 3 · RNF6 · `cliente_api.php` |
 | C6 | Cuando la API no responde, ¿el front muestra una página de error o su pantalla? | **Su pantalla**, con el aviso adentro y sin datos. Una página de error del servidor no demuestra nada; una pantalla en pie con la tabla vacía demuestra que son dos procesos. | RF13 · criterio 10 |
+| C8 | ¿Los estilos se traen de un CDN? | **No: se guardan en `front_php/publico/`.** Un CDN es una línea más corta, pero el día que el salón se quede sin internet la pantalla se ve como en 1995 — y eso pasa en clase, no en teoría. Dos archivos en el repositorio lo resuelven para siempre. | `vistas/plantilla.php` · 4_research D13 |
 | C7 | El formulario manda texto y la API pide números. ¿Quién convierte? | **El front convierte la FORMA** (`"12"` → `12`) porque un formulario HTML solo produce texto, y mandarlo entre comillas haría que la API lo rechazara **siendo correcto**. Lo que el front NO hace es juzgar el VALOR: si alguien escribió «doce», eso viaja como «doce» y la API dice que no sirve. | `front_php/index.php` · 6_contracts §9 |
 
 **Cómo se escribe una entrada nueva:** la pregunta tal como se hizo (no

@@ -20,7 +20,7 @@
 | **Front** | **PHP puro también**, con su propio front controller y plantillas `.php` | Un solo lenguaje en todo el proyecto: lo que se aprende del lado de la API sirve del lado de la pantalla |
 | **El front habla con la API** | **cURL** (extensión `curl`, viene en la imagen) | Es la forma canónica de PHP de hacer una petición HTTP saliente, y deja el verbo y el body a la vista |
 | Contenedor del front | `php:8.3-cli` **sin `pdo_mysql`** | La ausencia no es un olvido: **es la comprobación**. Ese proceso no puede llegar a MariaDB ni queriendo |
-| Estilos | Un `.css` escrito a mano | Sin CDN ni framework: el curso no corre sin internet, y una hoja de estilos legible es contenido |
+| Estilos | **Bootstrap 5.3**, guardado en `front_php/publico/` | Una pantalla que se ve terminada es parte del trabajo, y escribir CSS no es contenido de este curso. Va **local, no por CDN**: el salón se queda sin internet y la pantalla se sigue viendo igual |
 
 ## 2. Estructura de carpetas
 
@@ -40,7 +40,9 @@
 │   │   ├── productos_formulario.php  # sirve para agregar Y para editar
 │   │   └── no_encontrada.php
 │   └── publico/
-│       └── estilos.css               # escrito a mano, sin CDN
+│       ├── bootstrap.min.css         # guardado aquí, NO traído de un CDN
+│       ├── bootstrap.bundle.min.js   # solo para cerrar los avisos
+│       └── estilos.css               # los pocos retoques propios
 └── api_facturas/
     ├── Dockerfile                    # php:8.3-cli + pdo_mysql (el compose lo construye)
     ├── index.php                     # front controller: recibe TODO y enruta
@@ -230,6 +232,34 @@ hubo respuesta** —API caída, tiempo agotado—, que es distinto de «respondi
 con un error». Un 404 es la API funcionando y diciendo que ese producto no
 existe; un `null` es que no hay con quién hablar. De esa diferencia sale el
 aviso del criterio 10.
+
+#### Los archivos estáticos, y una trampa que costó una pantalla fea
+
+`php -S 0.0.0.0:8020 index.php` le da un **router** al servidor embebido, y
+entonces el servidor **ejecuta el router para todas las peticiones** —
+también para `/publico/estilos.css`. Como `index.php` no tiene una ruta que
+se llame así, la hoja de estilos caía en el 404 del final: el navegador
+recibía una página HTML donde esperaba CSS, y la pantalla salía sin un solo
+estilo.
+
+La solución es la que el propio PHP documenta: **devolver `false`** desde el
+router cuando el archivo pedido existe en el disco. Eso significa «yo no me
+encargo de ésta, entrégala tal cual».
+
+```php
+if (PHP_SAPI === 'cli-server') {
+    $archivo = __DIR__ . $ruta;
+    if ($ruta !== '/' && is_file($archivo)) {
+        return false;
+    }
+}
+```
+
+Vale la pena que esto esté escrito y no solo arreglado, por lo que enseña:
+**el fallo no lo detectó ninguna prueba**, porque todas comprobaban el texto
+de las páginas y el texto estaba perfecto. Lo detectó una persona abriendo el
+navegador. Desde entonces la prueba de humo verifica que cada archivo
+estático responda **y con su tipo de contenido**.
 
 #### Los avisos entre pantallas
 

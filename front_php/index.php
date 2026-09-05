@@ -31,6 +31,27 @@ require_once __DIR__ . '/cliente_api.php';
 $metodo = $_SERVER['REQUEST_METHOD'];
 $ruta   = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/') ?: '/';
 
+// ----------------------------------------------------------------------
+// 1.b LOS ARCHIVOS ESTÁTICOS (y una trampa que costó una pantalla fea)
+// ----------------------------------------------------------------------
+//
+// El servidor embebido de PHP, cuando se le da un router —que es lo que
+// hacemos con `php -S ... index.php`—, **lo ejecuta para TODAS las
+// peticiones**. También para `/publico/estilos.css`. Y como este archivo no
+// tiene una ruta que se llame así, la hoja de estilos caía en el 404 de
+// abajo: el navegador recibía una página HTML donde esperaba CSS, y la
+// pantalla salía sin un solo estilo.
+//
+// La solución es la que el propio PHP documenta: **devolver `false`** desde
+// el router. Eso le dice «yo no me encargo de ésta, entrégala tal cual», y
+// el servidor sirve el archivo del disco.
+if (PHP_SAPI === 'cli-server') {
+    $archivo = __DIR__ . $ruta;
+    if ($ruta !== '/' && is_file($archivo)) {
+        return false;
+    }
+}
+
 // Los avisos que una pantalla le deja a la siguiente. Se guardan en la sesión
 // porque después de guardar se REDIRIGE (ver más abajo), y una redirección
 // pierde todo lo que hubiera en memoria.
@@ -52,11 +73,27 @@ function aviso_pendiente(): ?array
     return $aviso;
 }
 
-/** Pinta una vista dentro del marco común. */
+/**
+ * Pinta una vista dentro del marco común.
+ *
+ * Las tres variables que el MARCO siempre necesita se ponen aquí con un valor
+ * por defecto, para que ninguna vista tenga que acordarse de mandarlas:
+ *
+ *   · $aviso   — lo que dejó la pantalla anterior (o nada);
+ *   · $errores — lo que respondió la API en esta petición (o nada);
+ *   · $ruta    — la dirección actual, que el menú usa para marcar dónde
+ *                está parado el usuario.
+ *
+ * La de $ruta hace falta por una razón que no se ve a simple vista: **esto es
+ * una función**, así que la $ruta que se calculó arriba, en el cuerpo del
+ * archivo, no entra aquí sola. Sin pasársela, el menú no marcaría nada.
+ */
 function pintar(string $vista, array $datos = []): void
 {
+    $datos += ['errores' => [], 'ruta' => $GLOBALS['ruta'] ?? '/'];
     $datos['aviso'] = aviso_pendiente();
-    extract($datos);                      // $productos, $ficha, $aviso…
+
+    extract($datos);                      // $productos, $ficha, $aviso, $ruta…
     $contenido = __DIR__ . "/vistas/$vista.php";
     require __DIR__ . '/vistas/plantilla.php';
 }

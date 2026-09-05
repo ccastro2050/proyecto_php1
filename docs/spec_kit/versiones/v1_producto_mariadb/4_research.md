@@ -167,6 +167,27 @@ front. Es un precio real, y es el correcto: en este proyecto la tentación es
 mayor que en otros porque los dos están en PHP, y por eso la regla se escribe
 en vez de darse por obvia.
 
+## D13 — Bootstrap, y guardado en el repositorio en vez de traído de un CDN
+
+**Alternativas descartadas:** escribir el CSS a mano (fue el primer intento) y
+enlazar Bootstrap desde un CDN.
+**Decisión:** Bootstrap 5.3, con sus dos archivos guardados en
+`front_php/publico/`, y un `estilos.css` propio de veinte líneas para lo poco
+que Bootstrap no trae.
+**Por qué no a mano:** una pantalla que se ve terminada es parte del trabajo
+—un sistema feo se lee como un sistema a medias—, y escribir una hoja de
+estilos decente no es contenido de este curso. Con Bootstrap, tres clases en
+una tabla dan un resultado profesional y el estudiante se concentra en lo que
+sí se está enseñando: capas, contratos y la separación front/API.
+**Por qué no del CDN:** una línea más corta, sí, y el día que el salón se
+quede sin internet la pantalla se ve como en 1995. Eso pasa en clase, no en
+teoría. Dos archivos en el repositorio lo resuelven para siempre, y de paso
+el proyecto sigue cumpliendo el Artículo 2: **esto no es una dependencia
+instalada por un gestor de paquetes**, es un archivo copiado — no hay
+`composer.json` ni `vendor/`.
+**Precio asumido:** 300 KB en el repositorio, y actualizar Bootstrap es
+volver a copiar el archivo. Los dos son baratos.
+
 ## D12 — El aviso viaja en la sesión, y después de guardar se redirige
 
 **Alternativa descartada:** pintar el listado directamente en la respuesta

@@ -99,8 +99,8 @@ para ver cómo se llegó a lo que existe. Su trabajo de reconstrucción va en un
    > Son la mitad del trabajo, no un añadido, y por eso nacen vacíos junto
    > a los de la API: la carpeta vacía a la vista recuerda lo que falta.
    >
-   > **No tiene** `db\init.sql`: ése no nace vacío — se copia del
-   > repositorio en el paso 5.
+   > **No tiene** `db\init.sql` ni los dos archivos de Bootstrap: ésos no
+   > nacen vacíos — se copian del repositorio en el paso 5.
 
 5. **Copie y pegue los 9 archivos que vienen dados** (con el explorador de
    Windows: Ctrl+C, Ctrl+V), desde la carpeta clonada del curso hacia SU
@@ -109,16 +109,21 @@ para ver cómo se llegó a lo que existe. Su trabajo de reconstrucción va en un
    | Del clon del curso | A su proyecto |
    |---|---|
    | `db\init.sql` | `db\` |
+   | `front_php\publico\bootstrap.min.css` | `front_php\publico\` |
+   | `front_php\publico\bootstrap.bundle.min.js` | `front_php\publico\` |
    | `docs\spec_kit\1_constitution.md` | `docs\spec_kit\` |
    | Los 7 `.md` de `docs\spec_kit\versiones\v1_producto_mariadb\` | `docs\spec_kit\versiones\v1_producto_mariadb\` |
 
-   (Estos 9 vienen dados — la IA no los genera: las specs se le SUBEN al
-   chat, y `db/init.sql` es la BD completa ya escrita.)
+   (Estos 11 vienen dados — la IA no los genera: las specs se le SUBEN al
+   chat, `db/init.sql` es la BD completa ya escrita, y los dos de Bootstrap
+   son la hoja de estilos que el proyecto **guarda en vez de traer de
+   internet**, para que la pantalla se vea igual en un salón sin red.)
 
 **Antes de abrir el chat, verifique:** `docs\spec_kit\1_constitution.md` debe
 existir, `docs\spec_kit\versiones\v1_producto_mariadb\` debe tener **7 archivos**
-(2_spec a 8_tasks) y `db\init.sql` debe tener contenido (~1.300 líneas).
-Si algo está vacío, falta el paso 5.
+(2_spec a 8_tasks), `db\init.sql` debe tener contenido (~1.300 líneas) y
+`front_php\publico\` debe tener los dos archivos de Bootstrap **con
+contenido** (unos 230 KB y 80 KB). Si algo está vacío, falta el paso 5.
 
 La estructura queda lista ANTES de hablar con la IA (es la de `3_plan.md`
 §2); al lado, la fase en la que la IA le entregará el código de cada
@@ -165,7 +170,9 @@ mi_v1_producto/                   ← SU carpeta
 │   │   ├── productos_formulario.php   ← Fase 7 (agregar Y editar, dos botones)
 │   │   └── no_encontrada.php          ← Fase 7
 │   └── publico/
-│       └── estilos.css                ← Fase 7 (a mano, sin CDN)
+│       ├── bootstrap.min.css          ← COPIADO del repo (no lo genera la IA)
+│       ├── bootstrap.bundle.min.js    ← COPIADO del repo
+│       └── estilos.css                ← Fase 7 (los pocos retoques propios)
 └── pruebas_humo/
     └── humo_front.py                  ← Fase 8 (criterios 7 a 10)
 ```
@@ -182,6 +189,7 @@ entrega tres tipos de cosas:
 |---|---|
 | Un bloque de código con su ruta (ej.: "Archivo: `api_facturas/modelos/Producto.php`") | Ese archivo, que ya existe vacío en ESA ruta |
 | (La BD no la entrega la IA) | `db/init.sql` se **copia del repositorio** tal cual, en el paso 5 — si la IA intenta escribirle un `CREATE TABLE`, recuérdele que la BD ya viene dada |
+| (Bootstrap tampoco) | `front_php/publico/bootstrap.min.css` y `bootstrap.bundle.min.js` se **copian** en el paso 5 — si la IA le propone un `<link>` a un CDN, cámbielo por la ruta local: el salón puede quedarse sin internet |
 | Comandos (docker compose, php -l, php -S, curl) | La terminal integrada del IDE, parado en la carpeta correcta (ver abajo) |
 
 Si un bloque llega **sin ruta**, no adivine: pregúntele "¿en qué archivo va
@@ -274,7 +282,9 @@ REGLAS DE TRABAJO (no negociables):
 6. Yo trabajo en Windows con un IDE (VS Code, usando su terminal integrada
    de PowerShell) y Docker Desktop. Dame los comandos para ese entorno.
 7. La base de datos YA VIENE DADA en db/init.sql — se monta tal cual en el
-   compose; no escribas ni modifiques SQL de creación de tablas.
+   compose; no escribas ni modifiques SQL de creación de tablas. Bootstrap
+   también viene dado en front_php/publico/: enlaza esos archivos locales
+   (/publico/bootstrap.min.css), NUNCA un CDN, y no me dictes su contenido.
 8. En mi máquina TAMBIÉN corre el proyecto clonado del curso con sus
    puertos originales. Para que ambos convivan, MI proyecto:
    a. Publica los puertos del host con +100: en el docker-compose.yml el
@@ -387,14 +397,16 @@ REGLAS (no negociables):
    las pantallas de la sección 9 del mismo documento.
 4. Todo en español, PHP 8.3 con declare(strict_types=1), con los comentarios
    didácticos que exige la constitución.
-5. Esta versión incluye SU FRONT (front_php), no solo la API. El front no
+5. Bootstrap ya está en front_php/publico/: enlaza esos archivos locales
+   (/publico/bootstrap.min.css), nunca un CDN, y no los reescribas.
+6. Esta versión incluye SU FRONT (front_php), no solo la API. El front no
    toca la base de datos: nada de new PDO ahí, y NO le hagas require de
    ningún archivo de api_facturas aunque los dos estén en PHP y funcionaría
    — lo único que comparten es el JSON. En el compose, el servicio del
    front no lleva credenciales de base de datos ni depends_on de mariadb.
-6. Ninguna pantalla le habla al usuario en jerga: nada de verbos HTTP,
+7. Ninguna pantalla le habla al usuario en jerga: nada de verbos HTTP,
    códigos de estado, /api/, PDO ni MariaDB en el texto que se ve.
-7. Al final, corre el smoke test completo de 7_quickstart.md —incluida la
+8. Al final, corre el smoke test completo de 7_quickstart.md —incluida la
    prueba de apagar la API con la base encendida— y muéstrame la evidencia
    de los 10 criterios de aceptación de 2_spec.md. La versión no está
    terminada hasta que los 10 estén en verde.

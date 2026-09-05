@@ -173,7 +173,8 @@ proyecto_php1/
 │   ├── index.php                # Front controller del front: ruta → pantalla
 │   ├── cliente_api.php          # Lo ÚNICO que habla con la API (y traduce sus errores)
 │   ├── vistas/                  # Las plantillas: el marco, el listado y el formulario
-│   └── publico/                 # estilos.css, escrito a mano (sin CDN)
+│   └── publico/                 # Bootstrap GUARDADO aquí (no traído de un CDN:
+│                                #   el salón puede quedarse sin internet) + estilos.css
 │
 ├── pruebas_humo/                # humo_front.py: recorre el sistema DESDE LA PANTALLA
 │                                #   y apaga la API para probar que son dos procesos

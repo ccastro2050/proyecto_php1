@@ -15,7 +15,8 @@ manos. Vale la pena verlo, porque casi siempre se cuenta al revés.
 
 Lo que se comprueba:
 
-  1. cada pantalla responde por su DIRECCIÓN PROPIA;
+  1. cada pantalla responde por su DIRECCIÓN PROPIA, y sus hojas de estilo
+     llegan de verdad —que no es lo mismo, y por eso hay una sección aparte—;
   2. el menú lleva a esas direcciones, y ninguna tiene el nombre de la tabla
      como parámetro;
   3. lo que la pantalla muestra es lo que la API devolvió;
@@ -141,6 +142,34 @@ for ruta, titulo in [("/", "Facturas"),
 c, t = ver(FRONT + "/pantalla-que-no-existe")
 revisar("una dirección inventada da 404, no una página en blanco",
         c == 404 and "no existe" in visible(t))
+
+print()
+print("=== 1.b Los archivos de estilo LLEGAN (y esto se agregó por un fallo) ===")
+# Esta sección existe porque el guion estuvo en verde con la pantalla
+# completamente sin estilos, y nadie se enteró hasta que alguien la abrió.
+#
+# La causa: el servidor embebido de PHP, cuando se le da un router, lo ejecuta
+# para TODAS las peticiones — también para la hoja de estilos, que caía en el
+# 404 del router y le devolvía HTML al navegador donde esperaba CSS.
+#
+# La lección: comprobar el TEXTO de una página no dice si la página se ve. Lo
+# que se comprueba aquí es que cada archivo estático responda **y con su tipo
+# de contenido**, porque un 200 que devuelve HTML disfrazado de CSS es
+# exactamente el fallo que se escapó.
+for archivo, tipo in [("/publico/bootstrap.min.css", "text/css"),
+                      ("/publico/estilos.css", "text/css"),
+                      ("/publico/bootstrap.bundle.min.js", "javascript")]:
+    try:
+        with navegador.open(FRONT + archivo, timeout=20) as r:
+            codigo, contenido = r.status, r.headers.get("Content-Type", "")
+    except Exception as e:
+        codigo, contenido = 0, str(e)
+    revisar(archivo.ljust(32) + " llega como " + tipo,
+            codigo == 200 and tipo in contenido, str(contenido))
+
+c, t = ver(FRONT + "/")
+revisar("y la página los pide (no están sueltos en la carpeta)",
+        "/publico/bootstrap.min.css" in t and "/publico/estilos.css" in t)
 
 print()
 print("=== 2. El menú lleva a la pantalla, con una dirección de verdad ===")

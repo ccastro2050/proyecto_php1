@@ -116,12 +116,18 @@ fase 7, cuando el front entre al compose.)
       `redirigir_con()`, `aviso_pendiente()`, `pintar()`, las rutas de
       [6_contracts.md](6_contracts.md) §9, la rama de los dos botones según
       `$_POST['verbo']`, `a_numero()` y el 404 con el marco puesto.
+      **Y el `return false` para los archivos estáticos**: sin él, la hoja de
+      estilos cae en el 404 y la pantalla sale sin un solo estilo
+      ([3_plan.md](3_plan.md) §4.7).
 - [ ] `front_php/vistas/`: `plantilla.php` (cabecera, menú, avisos, pie),
       `inicio.php`, `productos_lista.php`, `productos_formulario.php` (sirve
       para agregar Y para editar: el código va de solo lectura al editar, y
       aparecen los **dos** botones) y `no_encontrada.php`.
       **Todo lo que se pinte pasa por `htmlspecialchars`.**
-- [ ] `front_php/publico/estilos.css`: escrito a mano, sin CDN.
+- [ ] `front_php/publico/`: copiar ahí `bootstrap.min.css` y
+      `bootstrap.bundle.min.js` (**guardados en el proyecto, no enlazados a
+      un CDN**: el salón puede quedarse sin internet) y escribir el
+      `estilos.css` propio, que es corto a propósito.
 - [ ] `front_php/Dockerfile`: `php:8.3-cli`, copiar el código,
       `CMD php -S 0.0.0.0:8020 index.php`. **Sin `pdo_mysql`** — la ausencia
       es la comprobación.
@@ -131,8 +137,10 @@ fase 7, cuando el front entre al compose.)
       nombrar a `mariadb`.**
 
 **Verificar:** `http://localhost:8020/productos` muestra los 8 productos
-(criterio 7), y el recorrido de [7_quickstart.md](7_quickstart.md) §3.2
-—agregar, los dos botones, eliminar— funciona desde el navegador (criterio 8).
+(criterio 7) **y se ve con sus estilos aplicados** (mismo criterio 7 — abra
+`/publico/estilos.css` en el navegador: debe salir el CSS, no una página), y
+el recorrido de [7_quickstart.md](7_quickstart.md) §3.2 —agregar, los dos
+botones, eliminar— funciona desde el navegador (criterio 8).
 
 ## Fase 8 — La prueba de los dos procesos
 
