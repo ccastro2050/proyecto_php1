@@ -57,7 +57,7 @@ class ServicioRol implements IServicioRol
         $id = $this->validarClave($id);
         $rol = $this->repositorio->obtenerPorClave($id);
         if ($rol === null) {
-            throw new NoEncontradoExcepcion("No existe el rol con id = $id");
+            throw new NoEncontradoExcepcion("No existe un rol con id = $id");
         }
         return $rol;
     }
@@ -81,7 +81,7 @@ class ServicioRol implements IServicioRol
         }
         $filasAfectadas = $this->repositorio->actualizar($id, $datos);
         if ($filasAfectadas === 0) {
-            throw new NoEncontradoExcepcion("No existe el rol con id = $id");
+            throw new NoEncontradoExcepcion("No existe un rol con id = $id");
         }
         return $filasAfectadas;
     }
@@ -91,7 +91,7 @@ class ServicioRol implements IServicioRol
         $id = $this->validarClave($id);
         $filasEliminadas = $this->repositorio->eliminar($id);
         if ($filasEliminadas === 0) {
-            throw new NoEncontradoExcepcion("No existe el rol con id = $id");
+            throw new NoEncontradoExcepcion("No existe un rol con id = $id");
         }
         return $filasEliminadas;
     }

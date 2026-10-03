@@ -57,7 +57,7 @@ class ServicioRuta implements IServicioRuta
         $id = $this->validarClave($id);
         $ruta = $this->repositorio->obtenerPorClave($id);
         if ($ruta === null) {
-            throw new NoEncontradoExcepcion("No existe la ruta con id = $id");
+            throw new NoEncontradoExcepcion("No existe una ruta con id = $id");
         }
         return $ruta;
     }
@@ -82,7 +82,7 @@ class ServicioRuta implements IServicioRuta
         }
         $filasAfectadas = $this->repositorio->actualizar($id, $datos);
         if ($filasAfectadas === 0) {
-            throw new NoEncontradoExcepcion("No existe la ruta con id = $id");
+            throw new NoEncontradoExcepcion("No existe una ruta con id = $id");
         }
         return $filasAfectadas;
     }
@@ -92,7 +92,7 @@ class ServicioRuta implements IServicioRuta
         $id = $this->validarClave($id);
         $filasEliminadas = $this->repositorio->eliminar($id);
         if ($filasEliminadas === 0) {
-            throw new NoEncontradoExcepcion("No existe la ruta con id = $id");
+            throw new NoEncontradoExcepcion("No existe una ruta con id = $id");
         }
         return $filasEliminadas;
     }

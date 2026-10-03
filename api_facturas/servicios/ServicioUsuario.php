@@ -58,7 +58,7 @@ class ServicioUsuario implements IServicioUsuario
         $email = $this->validarClave($email);
         $usuario = $this->repositorio->obtenerPorClave($email);
         if ($usuario === null) {
-            throw new NoEncontradoExcepcion("No existe el usuario con email = $email");
+            throw new NoEncontradoExcepcion("No existe un usuario con email = $email");
         }
         return $usuario;
     }
@@ -81,7 +81,7 @@ class ServicioUsuario implements IServicioUsuario
 
         $filasAfectadas = $this->repositorio->actualizarContrasena($email, $contrasena);
         if ($filasAfectadas === 0) {
-            throw new NoEncontradoExcepcion("No existe el usuario con email = $email");
+            throw new NoEncontradoExcepcion("No existe un usuario con email = $email");
         }
         return $filasAfectadas;
     }
@@ -91,7 +91,7 @@ class ServicioUsuario implements IServicioUsuario
         $email = $this->validarClave($email);
         $filasEliminadas = $this->repositorio->eliminar($email);
         if ($filasEliminadas === 0) {
-            throw new NoEncontradoExcepcion("No existe el usuario con email = $email");
+            throw new NoEncontradoExcepcion("No existe un usuario con email = $email");
         }
         return $filasEliminadas;
     }
