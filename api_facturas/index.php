@@ -10,14 +10,34 @@
  * El recorrido completo de una petición, paso a paso, está explicado en
  * docs/FLUJO_DE_UNA_PETICION.md.
  *
+ * ======================================================================
+ * LOS SEIS RECURSOS DE LA v1: LAS TABLAS SIN CLAVE FORÁNEA
+ * ======================================================================
+ *
+ * `producto`, `empresa`, `persona`, `rol`, `ruta` y `usuario`. Son las tablas
+ * de las que las demás van a depender, y por eso van primero: una tabla con
+ * clave foránea no se puede llenar si la tabla a la que apunta está vacía.
+ *
+ * Y se dividen en dos grupos, que es la diferencia que más se nota al leer
+ * este archivo:
+ *
+ *   · los de llave ESCRITA por el cliente — `producto`, `empresa`, `persona`
+ *     y `usuario` —: la llave llega en la URL como texto;
+ *   · los de llave GENERADA por la base — `rol` y `ruta` —: la llave es un
+ *     número `AUTO_INCREMENT`, y aquí se comprueba que de verdad lo sea antes
+ *     de entregarla al controlador.
+ *
  * Rutas de la v1 (contratos exactos en docs 6_contracts.md):
  *   GET    /                          → diagnóstico
- *   GET    /api/producto[?limite=N]   → listar
- *   POST   /api/producto              → crear
- *   GET    /api/producto/{codigo}     → obtener uno
- *   PUT    /api/producto/{codigo}     → reemplazo completo
- *   PATCH  /api/producto/{codigo}     → actualización parcial
- *   DELETE /api/producto/{codigo}     → eliminar
+ *
+ *   GET    /api/<recurso>[?limite=N]  → listar     (204 si está vacía)
+ *   POST   /api/<recurso>             → crear
+ *   GET    /api/<recurso>/{llave}     → obtener uno
+ *   PUT    /api/<recurso>/{llave}     → reemplazo completo
+ *   PATCH  /api/<recurso>/{llave}     → actualización parcial
+ *   DELETE /api/<recurso>/{llave}     → eliminar
+ *
+ *   …con <recurso> en: producto · empresa · persona · rol · ruta · usuario
  */
 
 // "Modo estricto de tipos": si una función espera int y llega el string "5",
@@ -29,6 +49,11 @@ declare(strict_types=1);
 // carpeta donde vive ESTE archivo. Esta lista es el inventario del proyecto:
 require_once __DIR__ . '/servicios/ensamblador.php';
 require_once __DIR__ . '/controladores/ControladorProducto.php';
+require_once __DIR__ . '/controladores/ControladorEmpresa.php';
+require_once __DIR__ . '/controladores/ControladorPersona.php';
+require_once __DIR__ . '/controladores/ControladorRol.php';
+require_once __DIR__ . '/controladores/ControladorRuta.php';
+require_once __DIR__ . '/controladores/ControladorUsuario.php';
 
 // Toda respuesta de esta API es JSON — se avisa en el encabezado HTTP:
 header('Content-Type: application/json; charset=utf-8');
@@ -52,10 +77,6 @@ $ruta = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 //   ?? []              → si no había body (o el JSON está malo), queda []
 $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
-// Se arma el controlador. Su dependencia (el servicio) la crea el
-// ensamblador — el único archivo del sistema que conoce clases concretas:
-$controlador = new ControladorProducto(crearServicioProducto());
-
 // ----------------------------------------------------------------------
 // 2. ENRUTAR: comparar método + ruta y llamar al método del controlador
 // ----------------------------------------------------------------------
@@ -67,60 +88,145 @@ if ($ruta === '/' && $metodo === 'GET') {
     echo json_encode([
         'mensaje'   => 'API Facturas funcionando',
         'version'   => 'v1',
-        'contratos' => 'docs/spec_kit/versiones/v1_producto_mariadb/6_contracts.md',
+        'motor'     => 'mariadb',
+        'recursos'  => ['/api/producto', '/api/empresa', '/api/persona',
+                        '/api/rol', '/api/ruta', '/api/usuario'],
+        'contratos' => 'docs/spec_kit/versiones/v1_sin_fk/6_contracts.md',
     ], JSON_UNESCAPED_UNICODE);
     return;   // terminamos: no siga evaluando rutas
 }
 
-// /api/producto — la COLECCIÓN (sin código en la URL): listar y crear
-if ($ruta === '/api/producto') {
-    if ($metodo === 'GET') {
-        $controlador->listar();
-    } elseif ($metodo === 'POST') {
-        $controlador->crear($body);
-    } else {
-        responderNoPermitido();   // PUT, DELETE… aquí no existen → 405
+// ----------------------------------------------------------------------
+// Los recursos de LLAVE ESCRITA por el cliente (la llave es texto)
+// ----------------------------------------------------------------------
+
+// Cada entrada dice: el nombre del recurso → el controlador ya armado.
+// Las funciones `crearServicio*` las trae el ensamblador, el único archivo
+// que conoce clases concretas.
+$deLlaveDeTexto = [
+    'producto' => fn() => new ControladorProducto(crearServicioProducto()),
+    'empresa'  => fn() => new ControladorEmpresa(crearServicioEmpresa()),
+    'persona'  => fn() => new ControladorPersona(crearServicioPersona()),
+    'usuario'  => fn() => new ControladorUsuario(crearServicioUsuario()),
+];
+
+foreach ($deLlaveDeTexto as $recurso => $armar) {
+    // /api/<recurso> — la COLECCIÓN (sin llave en la URL): listar y crear
+    if ($ruta === "/api/$recurso") {
+        $controlador = $armar();
+        if ($metodo === 'GET') {
+            $controlador->listar();
+        } elseif ($metodo === 'POST') {
+            $controlador->crear($body);
+        } else {
+            responderNoPermitido();   // PUT, DELETE… aquí no existen → 405
+        }
+        return;
     }
-    return;
+
+    // /api/<recurso>/{llave} — UNA ficha concreta.
+    // str_starts_with pregunta si la ruta EMPIEZA por "/api/<recurso>/";
+    // substr corta lo que sigue después de ese prefijo: eso es la llave.
+    // Ej.: "/api/producto/PR001" → $llave = "PR001".
+    if (str_starts_with($ruta, "/api/$recurso/")) {
+        $llave = substr($ruta, strlen("/api/$recurso/"));
+        // urldecode revierte la codificación de URL (un "%20" vuelve a ser
+        // espacio, y un "%40" vuelve a ser la arroba de un email):
+        $llave = urldecode($llave);
+
+        $controlador = $armar();
+        if ($metodo === 'GET') {
+            $controlador->obtener($llave);
+        } elseif ($metodo === 'PUT') {
+            $controlador->reemplazar($llave, $body);
+        } elseif ($metodo === 'PATCH') {
+            $controlador->actualizar($llave, $body);
+        } elseif ($metodo === 'DELETE') {
+            $controlador->eliminar($llave);
+        } else {
+            responderNoPermitido();
+        }
+        return;
+    }
 }
 
-// /api/producto/{codigo} — UN producto concreto.
-// str_starts_with pregunta si la ruta EMPIEZA por "/api/producto/";
-// substr corta lo que sigue después de ese prefijo: eso es el código.
-// Ej.: "/api/producto/PR001" → $codigo = "PR001".
-if (str_starts_with($ruta, '/api/producto/')) {
-    $codigo = substr($ruta, strlen('/api/producto/'));
-    // urldecode revierte la codificación de URL (un "%20" vuelve a ser espacio):
-    $codigo = urldecode($codigo);
+// ----------------------------------------------------------------------
+// Los recursos de LLAVE GENERADA por la base (la llave es un número)
+// ----------------------------------------------------------------------
 
-    if ($metodo === 'GET') {
-        $controlador->obtener($codigo);
-    } elseif ($metodo === 'PUT') {
-        $controlador->reemplazar($codigo, $body);
-    } elseif ($metodo === 'PATCH') {
-        $controlador->actualizar($codigo, $body);
-    } elseif ($metodo === 'DELETE') {
-        $controlador->eliminar($codigo);
-    } else {
-        responderNoPermitido();
+$deLlaveNumerica = [
+    'rol'  => fn() => new ControladorRol(crearServicioRol()),
+    'ruta' => fn() => new ControladorRuta(crearServicioRuta()),
+];
+
+foreach ($deLlaveNumerica as $recurso => $armar) {
+    if ($ruta === "/api/$recurso") {
+        $controlador = $armar();
+        if ($metodo === 'GET') {
+            $controlador->listar();
+        } elseif ($metodo === 'POST') {
+            // Ojo: el POST de estos recursos NO manda la llave — la pone la
+            // base. Ver la cabecera de `ControladorRol`.
+            $controlador->crear($body);
+        } else {
+            responderNoPermitido();
+        }
+        return;
     }
-    return;
+
+    if (str_starts_with($ruta, "/api/$recurso/")) {
+        $texto = urldecode(substr($ruta, strlen("/api/$recurso/")));
+
+        // AQUÍ ESTÁ LA DIFERENCIA con los recursos de arriba: la llave tiene
+        // que ser un número, y se comprueba ANTES de llamar al controlador.
+        //
+        // ctype_digit('12') es true; ctype_digit('abc') y ctype_digit('1.5')
+        // son false. Si no es un número, la ruta simplemente NO EXISTE — por
+        // eso sale un 404 de ruta y no un 422 de dato: "/api/rol/abc" no es
+        // una petición mal escrita sobre un rol, es una dirección que esta
+        // API no sirve.
+        if (!ctype_digit($texto)) {
+            responderRutaNoEncontrada($metodo, $ruta);
+            return;
+        }
+        $id = (int) $texto;
+
+        $controlador = $armar();
+        if ($metodo === 'GET') {
+            $controlador->obtener($id);
+        } elseif ($metodo === 'PUT') {
+            $controlador->reemplazar($id, $body);
+        } elseif ($metodo === 'PATCH') {
+            $controlador->actualizar($id, $body);
+        } elseif ($metodo === 'DELETE') {
+            $controlador->eliminar($id);
+        } else {
+            responderNoPermitido();
+        }
+        return;
+    }
 }
 
 // Ninguna ruta coincidió: 404 de RUTA
 // (distinto del 404 de "el producto no existe", que decide el servicio).
-http_response_code(404);
-echo json_encode([
-    'estado' => 404, 'mensaje' => 'Ruta no encontrada.', 'detalle' => "$metodo $ruta",
-], JSON_UNESCAPED_UNICODE);
+responderRutaNoEncontrada($metodo, $ruta);
 
 // ----------------------------------------------------------------------
-// Función de apoyo del enrutador. ": void" declara que no devuelve nada.
+// Funciones de apoyo del enrutador. ": void" declara que no devuelven nada.
+
 function responderNoPermitido(): void
 {
     // 405 = "la ruta existe, pero no con ese método"
     http_response_code(405);
     echo json_encode([
         'estado' => 405, 'mensaje' => 'Método no permitido para esta ruta.',
+    ], JSON_UNESCAPED_UNICODE);
+}
+
+function responderRutaNoEncontrada(string $metodo, string $ruta): void
+{
+    http_response_code(404);
+    echo json_encode([
+        'estado' => 404, 'mensaje' => 'Ruta no encontrada.', 'detalle' => "$metodo $ruta",
     ], JSON_UNESCAPED_UNICODE);
 }
